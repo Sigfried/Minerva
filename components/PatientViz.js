@@ -136,13 +136,14 @@ export default class PatientViz extends Component {
           {
             direction: 'down',
             initialWidth: width,
-            initialHeight: height,
+            initialHeight: 2000,
             labella: {
               //minPos: 100, 
               maxPos: width * .85, //stubWidth: 100,
             },
             timeFn: d => d.start_date,
-            textFn: d => d.concept_name,
+            textFn: d => `${d.concept_name}
+              ${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
           };
     let ptDesc = showPt &&
       `Pt Id: ${showPt+''},
@@ -157,12 +158,12 @@ export default class PatientViz extends Component {
               </h3>
               <Timeline height={height} width={width}
                 opts={timelineOpts}
-                eras={showPt && showPt.children[0].records}
+                eras={showPt && showPt.lookup("Condition").records}
               >
               </Timeline>
               <Timeline height={height} width={width}
                 opts={timelineOpts}
-                eras={showPt && showPt.children[1].records}
+                eras={showPt && showPt.lookup("Drug").records}
               >
               </Timeline>
               <h4>{ptDesc}</h4>
@@ -187,13 +188,15 @@ export default class PatientViz extends Component {
       data.forEach(rec=>{
         rec.start_date = new Date(rec.era_start_date);
         rec.end_date = new Date(rec.era_end_date);
+        condNames(rec);
       });
       let ptStartDates = _.supergroup(data, ['person_id','start_date']);
       let ptDateMins = ptStartDates.aggregates(_.min,'start_date','dict');
       let ptEndDates = _.supergroup(data, ['person_id','start_date']);
       let ptDateMaxes = ptEndDates.aggregates(_.max,'end_date','dict');
       let ptEras = _.supergroup(data,
-        ['person_id', 'domain_id', 'soc_concept_name', 'concept_name']);
+        ['person_id', 'domain_id', 
+         'name_0','name_1','name_2','name_3']);
       let dataForTable = ptEras.map(d=>
         { 
           let p = {
@@ -203,9 +206,12 @@ export default class PatientViz extends Component {
                    ptDateMins[d]) / 
                      (1000 * 60 * 60 * 24),
             eras: d.records.length,
+            //Condition: d.lookup('Condition').children.length,
+            //Drug: d.lookup('Drug').children.length,
           };
           d.children.forEach(domain=>{
             p[domain] = domain.children.length;
+            console.log(`${d}: ${domain}: ${domain.children.length}`);
           });
           return p;
         });
@@ -213,3 +219,13 @@ export default class PatientViz extends Component {
     });
   }
 }
+function condNames(rec) {
+  let names = _.chain([ 'soc_concept_name', 
+            'hglt_concept_name',
+            'hlt_concept_name',
+            'pt_concept_name',
+            'concept_name'
+          ]).map(d=>rec[d]).compact().value();
+  names.forEach((name, i) => rec['name_' + i] = name);
+}
+

@@ -10,7 +10,7 @@ export class Timeline extends Component {
     return (<div ref="div" 
             style={{border:"1px solid blue", 
                     height:height+'px', width:width+'px',
-                    fontSize: 10,
+                    fontSize: 10, overflow: 'auto',
                   }}>
             </div>);
   }
