@@ -6,7 +6,7 @@ import * as Selector from '../selectors';
 import PatientViz from '../components/PatientViz';
 
 import * as ExplorerActions from '../actions';
-import { Navbar, NavbarBrand, Nav, NavItem, NavDropdown, MenuItem } from 'react-bootstrap';
+import { Navbar, NavBrand, Nav, NavItem, NavDropdown, MenuItem } from 'react-bootstrap';
 //require('expose?$!expose?jQuery!jquery');
 //require("bootstrap-webpack");
 
@@ -60,7 +60,7 @@ class App extends Component {
     return (
       <div>
         <Navbar>
-            <NavbarBrand><a href="/">Cassandra / OHDSI</a></NavbarBrand>
+            <NavBrand><a href="/">Cassandra / OHDSI</a></NavBrand>
             <Nav>
               <NavItem eventKey={3} href="/patientviz">Patient Viz</NavItem>
             </Nav>

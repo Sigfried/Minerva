@@ -20,7 +20,7 @@ export default class DataTable extends Component {
                   label={col}
                   width={(Math.min(20, (_.chain(recs) // 50 max col width
                     .pluck(col)
-                    .pluck('length').concat(5) // 5 min col width
+                    .map(d=>d.toString().length).concat(5) // 5 min col width
                     .max()
                     .value())) + 10) * 7}
                   dataKey={colidx++}
