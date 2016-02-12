@@ -130,7 +130,7 @@ export default class PatientViz extends Component {
   render() {
     let {width, height} = this.props;
     width = (typeof width === "undefined") && 1100 || width;
-    height = (typeof height === "undefined") && 500 || height;
+    height = (typeof height === "undefined") && 300 || height;
     const {data, dataForTable, ptEras, showPt} = this.state;
     let timelineOpts = 
           {
@@ -144,16 +144,28 @@ export default class PatientViz extends Component {
             timeFn: d => d.start_date,
             textFn: d => d.concept_name,
           };
+    let ptDesc = showPt &&
+      `Pt Id: ${showPt+''},
+       Age: ${showPt.records[0].age},
+       Gender: ${showPt.records[0].gender},
+       Race: ${showPt.records[0].race},
+       Ethnicity: ${showPt.records[0].ethnicity}`;
     return  <div> 
-              <h2>Here we are! 
+              <h3>
                 {data.length} records,  
                 {dataForTable.length} patients
-              </h2>
+              </h3>
               <Timeline height={height} width={width}
                 opts={timelineOpts}
-                eras={showPt && showPt.records}
+                eras={showPt && showPt.children[0].records}
               >
               </Timeline>
+              <Timeline height={height} width={width}
+                opts={timelineOpts}
+                eras={showPt && showPt.children[1].records}
+              >
+              </Timeline>
+              <h4>{ptDesc}</h4>
               <PtTable 
                   data={dataForTable} 
                   ptEras={ptEras}
