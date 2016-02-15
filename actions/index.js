@@ -1,7 +1,7 @@
 import {createAction} from 'redux-actions';
 import { pushState } from 'redux-router';
 //import fetch from 'isomorphic-fetch';
-import _ from 'supergroup';
+import _ from 'supergroup-es6';
 import * as dimUtils from '../dimUtils';
 import * as Selectors from '../selectors';
 require('isomorphic-fetch');

@@ -1,13 +1,32 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import _ from 'supergroup';
-import d3KitTimeline from 'd3Kit-timeline';
+import d3KitTimeline from '../d3Kit-timeline/dist/d3Kit-timeline';
 import labella from 'labella';
 
-export class Timeline extends Component {
+/*
+var nodes = [
+  new labella.Node(1, 50), // idealPos, width
+  new labella.Node(2, 50),
+  new labella.Node(3, 50),
+  new labella.Node(3, 50),
+  new labella.Node(3, 50),
+];
+
+var force = new labella.Force()
+  .nodes(nodes)
+  .compute();
+
+// The rendering is independent from this library.
+// User can use canvas, svg or any library to draw the labels.
+// There is also a built-in helper for this purpose. See labella.Renderer
+draw(force.nodes());
+debugger;
+*/
+export class TimelineNOTUSING extends Component {
   render() {
     const {data, width, height} = this.props;
-    return (<div ref="div" 
+    return (<div
             style={{border:"1px solid blue", 
                     height:height+'px', width:width+'px',
                     fontSize: 10, overflow: 'auto',
@@ -18,20 +37,19 @@ export class Timeline extends Component {
     const {eras} = this.props;
     let chart = this.state.chart;
     let el = ReactDOM.findDOMNode(this);
-    console.log(eras);
     //let data = this.state.starwars.slice(3);
     chart.data(eras || []);
+    //let layers = d3.max(d3.select(el).selectAll('.label-g').data().map(d=>d.layerIndex))||-1 + 1;
+    //console.log(`layers: ${layers}`);
 
   }
   componentDidMount() {
     const {eras, width, height, opts} = this.props;
     let el = ReactDOM.findDOMNode(this);
-    //this.lc = new D3LineChart();
-    //this.lc.setx(d=>d.issue_period)
-    //this.lc.sety(d=>d.value);
-    //this.lc.create(this.refs.div, serieses);
-    //var chart = new d3Kit.Timeline('#timeline', 
     var chart = new d3KitTimeline.Timeline(el, opts);
+    d3.select(el).selectAll('.axis')
+      .style('fill','white')
+      .style('stroke','black');
 
     chart.data([]);
     this.setState({chart});

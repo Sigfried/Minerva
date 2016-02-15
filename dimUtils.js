@@ -1,4 +1,4 @@
-import _ from 'supergroup';
+import _ from 'supergroup-es6';
 
 
 export function propList(recs, cb) {

@@ -100,12 +100,14 @@ exp.rawDims2 = createSelector(
 
 exp.dims = exp.rawDims;
 
+/*
 exp.dimsVals = createSelector(
   exp.filteredRecs, exp.dims,
   //exp.filteredRecs, exp.rawDims2,
   (recs, dims) => _.chain(dims).map(dim => 
       [dim.field, dimVals(dim,recs)]).object().value()
 );
+*/
 /*
 exp.dims = createSelector(
   exp.rawDims2,
@@ -137,9 +139,10 @@ export const parseApiId = str => {
   }
 };
 
+/*
 export const dimVals = (dim, recs) =>
   _.supergroup(recs, dim.func || dim.field)
       .sortBy(dim.sortBy || (a=>-a.records.length))
       .addLevel(d=>isFinite(d.value) ? 'Not Missing' : 'Missing',
                 {dimName: 'Missing value'});
-
+*/
