@@ -127,7 +127,7 @@ export const explorer = state => {
 export const apiId = params => {
   const {api, datasetLabel, schema, where} = params;
   return [api, datasetLabel, schema, 
-    JSON.stringify(where||'{}')].join('##');
+    JSON.stringify(where||'{}').replace(/"/g,'')].join('##');
 };
 export const parseApiId = str => {
   let [api, datasetLabel, schema, where] = str.split('##');

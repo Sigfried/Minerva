@@ -127,8 +127,11 @@ export default class PatientViz extends Component {
     apicall(apistring);
   }
   newData(data) {
+    const {cacheData, } = this.props;
     if (this.state.patientsLoaded) return;
     let patients = new PatientGroup(data);
+    cacheData({apistring:Selector.apiId({api:'patients',datasetLabel:'patients'}), 
+               data:patients});
     this.setState({data, patients, patientsLoaded: true});
     return patients;
     data.forEach(rec=>{
@@ -212,10 +215,6 @@ export default class PatientViz extends Component {
        Race: ${showPt.get('race')},
        Ethnicity: ${showPt.get('ethnicity')}`;
     return  <div> 
-              <h3>
-                {patients.data.length} records,  
-                {patients.count()} patients
-              </h3>
               <h5>Pt Id {showPt && showPt.get('id') || 'N/A'} Conditions</h5>
               <Timeline height={height} width={width}
                 opts={timelineOpts}

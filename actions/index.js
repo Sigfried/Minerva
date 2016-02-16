@@ -50,7 +50,7 @@ const requestData = createAction(DATA_REQUESTED);
 const receiveData = createAction(DATA_RECEIVED);
 
 export const DATA_CACHED = 'DATA_CACHED';
-const cacheData = createAction(DATA_CACHED);
+export const cacheData = createAction(DATA_CACHED);
 
 export function apicall(apistring, dontFetch) {
   if (typeof apistring !== 'string')

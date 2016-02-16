@@ -5,8 +5,7 @@ import { createAction } from 'redux-actions';
 import { resetErrorMessage } from '../actions';
 import * as Selector from '../selectors';
 import PatientViz from '../components/PatientViz';
-
-import * as ExplorerActions from '../actions';
+import * as Actions from '../actions';
 import { Navbar, NavBrand, Nav, NavItem, NavDropdown, MenuItem } from 'react-bootstrap';
 //require('expose?$!expose?jQuery!jquery');
 //require("bootstrap-webpack");
@@ -17,7 +16,7 @@ class App extends Component {
     const {dispatch, router} = this.props;
     return {
       queryChange: (key, val) =>
-        ExplorerActions.queryChange(
+        Actions.queryChange(
           this.props.dispatch,
           this.props.router,
           key, val),
@@ -31,7 +30,7 @@ class App extends Component {
   }
   render() {
         //<PickData tableWidth={700} tableHeight={1000}/>
-    const { datasets, configChange, router, apicall } = this.props;
+    const { datasets, configChange, router, apicall, cacheData } = this.props;
     let granularity = router.location.state &&
                       router.location.state.granularity &&
                       router.location.state.granularity || 'month';
@@ -44,6 +43,7 @@ class App extends Component {
     let children = React.Children.map(this.props.children, (child, i) =>
         React.cloneElement(child, {
           apicall,
+          cacheData,
           granularity,
           datasets,
         })
@@ -52,6 +52,12 @@ class App extends Component {
               <NavItem eventKey={1} href="/dqdata">DQ Data</NavItem>
               <NavItem eventKey={2} href="/seedims">See Dims</NavItem>
     */
+    let params = { api:'person_data',datasetLabel:'person_data' };
+    let data = datasets[Selector.apiId(params)] || [];
+    let counts = data && data.length && `${data.length} records` || '';
+    params = { api:'patients',datasetLabel:'patients' };
+    data = datasets[Selector.apiId(params)] || [];
+    counts += data && data.length && `, ${data.length} patients` || '';
     return (
       <div>
         <Navbar>
@@ -63,7 +69,7 @@ class App extends Component {
               <NavDropdown eventKey={4} title={granularity || 'Choose granularity'} id="basic-nav-dropdown">
                 {granularityChoices}
               </NavDropdown>
-              <NavItem>Testing...</NavItem>
+              <NavItem>{counts}</NavItem>
             </Nav>
           </Navbar>
         {this.renderErrorMessage()}
@@ -132,8 +138,9 @@ function mapStateToProps(state) {
 }
 
 export default connect(mapStateToProps, {
-  apicall: ExplorerActions.apicall,
-  configChange: ExplorerActions.configChange,
+  apicall: Actions.apicall,
+  cacheData: Actions.cacheData,
+  configChange: Actions.configChange,
   resetErrorMessage,
   dispatch: d => d
   //pushState,

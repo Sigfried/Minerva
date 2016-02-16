@@ -42,7 +42,7 @@ function datasets(state = {person_data:[]}, action) {
               { [action.payload.apistring]: empty });
     case DATA_CACHED:
       const {apistring, url, data} = action.payload;
-      if (!state[apistring].requestedOnly &&
+      if (state[apistring] && !state[apistring].requestedOnly &&
           _.isEqual(state[apistring], data))
         debugger;
       return Object.assign({}, state,
