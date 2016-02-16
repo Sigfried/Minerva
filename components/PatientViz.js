@@ -22,9 +22,11 @@ require("bootstrap-webpack");
 need to deal with granularity. 
 */
 
+/*
 function getData(callback) {
   d3.csv('./data/person_data.csv', callback);
 }
+*/
 
 function condNames(rec) {
   let names = _.chain([ 'soc_concept_name', 
@@ -118,9 +120,16 @@ export class PatientGroup extends Array {
   }
 }
 export default class PatientViz extends Component {
-  newData(err, data) {
+  getData() {
+    const {apicall, } = this.props;
+    let apiparams = { api:'person_data',datasetLabel:'person_data' };
+    let apistring = Selector.apiId(apiparams);
+    apicall(apistring);
+  }
+  newData(data) {
+    if (this.state.patientsLoaded) return;
     let patients = new PatientGroup(data);
-    this.setState({data, patients});
+    this.setState({data, patients, patientsLoaded: true});
     return patients;
     data.forEach(rec=>{
       rec.start_date = new Date(rec.era_start_date);
@@ -167,10 +176,15 @@ export default class PatientViz extends Component {
     };
   }
   componentWillMount() {
-    getData(this.newData.bind(this));
+    this.getData();
+  }
+  componentDidUpdate() {
+    let params = { api:'person_data',datasetLabel:'person_data' };
+    let data = this.props.datasets[Selector.apiId(params)] || [];
+    data.length && this.newData(data);
   }
   render() {
-    let {width, height} = this.props;
+    let {width, height, granularity, explorer} = this.props;
     width = (typeof width === "undefined") && 1100 || width;
     height = (typeof height === "undefined") && 300 || height;
     const {patients, showPt} = this.state;
@@ -187,6 +201,7 @@ export default class PatientViz extends Component {
             },
             timeFn: d => d.valueOf(),
             textFn: d => `${d.records.length} events`,
+            dotRadius: d => Math.pow(d.records.length, 3/4),
           };
             //textFn: d => `${d.concept_name}<br/>
               //${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
@@ -205,7 +220,7 @@ export default class PatientViz extends Component {
               <Timeline height={height} width={width}
                 opts={timelineOpts}
                 //eras={showPt && showPt.lookup("Condition").records}
-                eras={showPt && showPt.eventsBy('year')}
+                eras={showPt && showPt.eventsBy(granularity)}
               >
               </Timeline>
               <h4>{ptDesc}</h4>
@@ -287,6 +302,11 @@ class PtTable extends React.Component {
   }
 }
 export class Timeline extends Component {
+  constructor() {
+    super();
+    this.state = {
+    };
+  }
   render() {
     const {data, width, height} = this.props;
     return (<div
@@ -301,7 +321,7 @@ export class Timeline extends Component {
     let chart = this.state.chart;
     let el = ReactDOM.findDOMNode(this);
     //let data = this.state.starwars.slice(3);
-    chart.data(eras || []);
+    chart && chart.data(eras || []);
     //let layers = d3.max(d3.select(el).selectAll('.label-g').data().map(d=>d.layerIndex))||-1 + 1;
     //console.log(`layers: ${layers}`);
 
@@ -313,6 +333,5 @@ export class Timeline extends Component {
 
     chart.data([]);
     this.setState({chart});
-
   }
 }

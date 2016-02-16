@@ -13,19 +13,19 @@ export const schema = createSelector(
 );
 
 let exp = {};
-exp.recs = state => state.explorer.recs;
-exp.rawDims = state => state.explorer.dims;
-exp.dimList = state => state.explorer.dimList;
+exp.recs = state => state.recs;
+exp.rawDims = state => state.dims;
+exp.dimList = state => state.dimList;
 
 /*
 exp.schema = state => {
-  return state.router.location.query.schema || state.explorer.config.schema;
+  return state.router.location.query.schema || state.config.schema;
 };
 */
 exp.dimsetset = state => {
   return state.router.location.query.dimsetset || 
-    state.explorer.datasets.dimsetsets.length &&
-    state.explorer.datasets.dimsetsets[0].dimsetset || 'dimsetset';
+    state.datasets.dimsetsets.length &&
+    state.datasets.dimsetsets[0].dimsetset || 'dimsetset';
 };
 
 exp.filterSettings = state => state.router.location.query.filters;
@@ -114,13 +114,13 @@ exp.dims = createSelector(
   exp.dimsVals,
   (raw, vals) => _.filter(raw, d=>vals[d.field].length > 1)
 );
-*/
-
 export const explorer = state => {
   let es = Object.assign({}, state.explorer);
   _.each(exp, (f,k) => es[k] = f(state));
   return es;
 }
+*/
+
 
 // OTHER STUFF, not really selectors
 //

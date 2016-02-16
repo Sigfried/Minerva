@@ -26,32 +26,26 @@ class App extends Component {
 */
   componentWillMount() {
     const {configChange, router} = this.props;
+    configChange(router, 'granularity', 'month');
     configChange(router, null, null, '/patientviz');
   }
   render() {
         //<PickData tableWidth={700} tableHeight={1000}/>
-    const { explorer, configChange, router, apicall } = this.props;
+    const { datasets, configChange, router, apicall } = this.props;
+    let granularity = router.location.state &&
+                      router.location.state.granularity &&
+                      router.location.state.granularity || 'month';
 
-    let apiparams = {
-        api:'dimsetsets',
-        datasetLabel: 'dimsetsets-summary',
-    };
-    /*
-    let dimsetsets = explorer.datasets[Selector.apiId(apiparams)];
-    let dimsetsetChoices = dimsetsets ?
-      _.sortBy(dimsetsets, d => -d.records)
-      .map(
-        dc => <MenuItem onSelect={this.dssChoose.bind(this)} key={'dss'+dc.dimsetset} eventKey={dc.dimsetset}>{dc.dimsetset} ({dc.records})</MenuItem>)
-      : '';
-    */
+    let granularityChoices = ['day','month','year'].map(
+      gran => <MenuItem onSelect={() => this.granularityChoose(gran, configChange, router)} key={'gran'+gran} eventKey={gran}>{gran}</MenuItem>);
 
-    //console.log('dimsetsetchoices', dimsetsetChoices, dimsetsets);
+    let patientViz = this.props.children && this.props.children[0];
+
     let children = React.Children.map(this.props.children, (child, i) =>
         React.cloneElement(child, {
           apicall,
-          datasets: explorer.datasets,
-          dimsetset: explorer.dimsetset,
-          recs: explorer.recs,
+          granularity,
+          datasets,
         })
     );
     /*
@@ -61,9 +55,15 @@ class App extends Component {
     return (
       <div>
         <Navbar>
-            <NavBrand><a href="/">Cassandra / OHDSI</a></NavBrand>
+            <NavBrand><a href="/">Miverva / OHDSI</a></NavBrand>
             <Nav>
               <NavItem eventKey={3} href="/patientviz">Patient Viz</NavItem>
+            </Nav>
+            <Nav>
+              <NavDropdown eventKey={4} title={granularity || 'Choose granularity'} id="basic-nav-dropdown">
+                {granularityChoices}
+              </NavDropdown>
+              <NavItem>Testing...</NavItem>
             </Nav>
           </Navbar>
         {this.renderErrorMessage()}
@@ -76,15 +76,9 @@ class App extends Component {
               </NavDropdown>
     */
   }
-/*
-  dssChoose(evt, dss) {
-    ExplorerActions.queryChange(
-      this.props.dispatch,
-      this.props.router,
-      'dimsetset', dss);
-    //location.reload();
+  granularityChoose(granularity, configChange, router) {
+    configChange(router, 'granularity', granularity);
   }
-*/
   renderErrorMessage() {
     const { errorMessage } = this.props;
     if (!errorMessage) {
@@ -127,9 +121,10 @@ App.propTypes = {
 function mapStateToProps(state) {
   return {
     errorMessage: state.errorMessage,
-    explorer: Selector.explorer(state),
+    //explorer: Selector.explorer(state),
     router: state.router,
-    viz_data: state.viz_data
+    viz_data: state.viz_data,
+    datasets: state.datasets,
     //inputValue: state.router.location.pathname.substring(1),
     //explorer: state.explorer,
     //explorer: state.explorer.explorerReducer,

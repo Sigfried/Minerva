@@ -6,6 +6,20 @@ import * as dimUtils from '../dimUtils';
 import * as Selectors from '../selectors';
 require('isomorphic-fetch');
 
+
+function apiurl(params={}) {
+  let {api, where, datasetLabel} = params;
+  if (!(api && datasetLabel))
+    debugger;
+  let qs = _.chain(where).pairs()
+              .map(d=>d.join('='))
+              .join('&').value();
+  let url = '/data/' + api + '?' + qs;
+  return url;
+}
+
+// old stuff... still using what? configChange... ?
+
 export const CONFIG_CHANGED = 'CONFIG_CHANGED';
 export const configChange = (router, key, val, path) => {
   let query = router.location.query;
@@ -46,8 +60,8 @@ export function apicall(apistring, dontFetch) {
 
   return (dispatch, getState) => {
     const state = getState();
-    if (state.explorer.datasets[apistring]) {
-      if (state.explorer.datasets[apistring].requestedOnly)
+    if (state.datasets[apistring]) {
+      if (state.datasets[apistring].requestedOnly)
         return 'requested';
       return 'ready';
     }
@@ -80,16 +94,6 @@ export function apicall(apistring, dontFetch) {
         dispatch(cacheData({apistring, url:url,data:json}))
       })
   }
-}
-function apiurl(params={}) {
-  let {schema, api, where, datasetLabel} = params;
-  if (!(schema && api && datasetLabel))
-    debugger;
-  let qs = _.chain(where).pairs()
-              .map(d=>d.join('='))
-              .join('&').value();
-  let url = '/data/' + schema + '/' + api + '?' + qs;
-  return url;
 }
 /*
 export function fetchRecsAsync(apiquery) {

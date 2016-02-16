@@ -25,14 +25,10 @@ app.listen(port, function(error) {
     console.info("==> 🌎  Listening on port %s. Open up http://localhost:%s/ in your browser.", port, port);
   }
 });
-app.use(function(req, res) {
-  res.sendFile(__dirname + '/index.html');
-});
-
 
 app.get("/data/person_data", function(req, res) {
   var q = 'SELECT * ' +
-          'from cdm.person_data ';
+          'FROM cdm.person_data LIMIT 5000';
   var postprocess = rows=>rows.map(row=> {
     try {
       return _.extend(row, {
@@ -42,7 +38,7 @@ app.get("/data/person_data", function(req, res) {
       console.error(e);
     }
   });
-  getData(q, params)
+  getData(q, null)
     .then(json => {
       console.log(req.url, json.length, 'results');
       if (postprocess)
@@ -51,6 +47,10 @@ app.get("/data/person_data", function(req, res) {
     })
     .then(json => res.json(json));
 });
+app.use(function(req, res) {
+  res.sendFile(__dirname + '/index.html');
+});
+
 
 function pgErr(msg, err, done, reject, client) {
   console.log(msg, err.toString());
