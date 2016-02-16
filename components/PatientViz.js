@@ -84,13 +84,13 @@ export class Patient {
           (this._periods[granularity] = _.supergroup(this.eras, 
               d=>dateRound(d.start_date, granularity), {dimName: granularity}));
   }
-  get(field) {
+  get(field, args) {
     if (typeof field === "function")
       return field(this);
     if (typeof field !== "string")
       throw new Error("what do you want me to do?");
     if (typeof this[field] === "function") // pt.get('eventDays')
-      return this[field]();
+      return this[field](...args);
     if (field in this) // pt.get('id')
       return this[field];
     if (this.eras.length && field in this.eras[0]) // pt.get('race')
@@ -176,6 +176,7 @@ export default class PatientViz extends Component {
     super();
     this.state = {
       patients: new PatientGroup([]),
+      highlightEvts: [],
     };
   }
   componentWillMount() {
@@ -188,14 +189,14 @@ export default class PatientViz extends Component {
   }
   render() {
     let {width, height, granularity, explorer} = this.props;
-    width = (typeof width === "undefined") && 1100 || width;
+    width = (typeof width === "undefined") && 800 || width;
     height = (typeof height === "undefined") && 300 || height;
     const {patients, showPt} = this.state;
     let timelineOpts = 
           {
             direction: 'down',
             initialWidth: width,
-            initialHeight: 2000,
+            initialHeight: 500,
             layerGap: 30,
             labella: {
               //minPos: 100, 
@@ -205,6 +206,8 @@ export default class PatientViz extends Component {
             timeFn: d => d.valueOf(),
             textFn: d => `${d.records.length} events`,
             dotRadius: d => Math.pow(d.records.length, 3/4),
+            dotColor: 'rgba(50, 80, 100, 0.5)',
+            linkColor: 'rgba(50, 80, 100, 0.5)',
           };
             //textFn: d => `${d.concept_name}<br/>
               //${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
@@ -214,20 +217,36 @@ export default class PatientViz extends Component {
        Gender: ${showPt.get('gender')},
        Race: ${showPt.get('race')},
        Ethnicity: ${showPt.get('ethnicity')}`;
-    return  <div> 
-              <h5>Pt Id {showPt && showPt.get('id') || 'N/A'} Conditions</h5>
-              <Timeline height={height} width={width}
-                opts={timelineOpts}
-                //eras={showPt && showPt.lookup("Condition").records}
-                eras={showPt && showPt.eventsBy(granularity)}
-              >
-              </Timeline>
-              <h4>{ptDesc}</h4>
-              <PtTable 
-                  patients={patients} 
-                  parent={this}
-                  />
-            </div>;
+    let timelineEvents = {
+      labelMouseover: this.labelOver.bind(this),
+    }
+    let evtList = this.state.highlightEvts.map(d=><p key={d}>{d}</p>);
+    return  <Grid> 
+              <Row>
+                <Col md={9}>
+                  <h5>Pt Id {showPt && showPt.get('id') || 'N/A'} Conditions</h5>
+                  <Timeline height={height} width={width}
+                    opts={timelineOpts}
+                    timelineEvents={timelineEvents}
+                    //eras={showPt && showPt.lookup("Condition").records}
+                    eras={showPt && showPt.eventsBy(granularity)}
+                  >
+                  </Timeline>
+                  <h4>{ptDesc}</h4>
+                  <PtTable 
+                      patients={patients} 
+                      parent={this}
+                      />
+                </Col>
+                <Col md={2} mdOffset={1} className="evt-list">
+                  {evtList}
+                </Col>
+              </Row>;
+            </Grid>;
+  }
+  labelOver(node) {
+    let highlightEvts = node.records.map(d=>d.concept_name);
+    this.setState({highlightEvts});
   }
               /*
                 <Axis type={'x'} 
@@ -243,10 +262,10 @@ export default class PatientViz extends Component {
 
 class TableCell extends React.Component {
   render() {
-    const {rowIndex, field, data, ...props} = this.props;
+    const {rowIndex, field, args, data, ...props} = this.props;
     return (
       <Cell {...props}>
-        { data.length && data[rowIndex].get(field) || '' }
+        { data.length && data[rowIndex].get(field, args) || '' }
       </Cell>
     );
   }
@@ -274,28 +293,16 @@ class PtTable extends React.Component {
         rowsCount={this.state.patients.count()}
         rowHeight={25}
         headerHeight={50}
-        width={1100}
+        width={800}
         height={250}>
-        <Column
-          header={<Cell>PersonId</Cell>}
-          cell={
-            <TableCell
-              data={this.state.patients}
-              field="id"
-            />
-          }
-          width={100}
-        />
-        <Column
-          header={<Cell>Days</Cell>}
-          cell={
-            <TableCell
-              data={this.state.patients}
-              field={'eventDays'}
-            />
-          }
-          width={100}
-        />
+        <Column header={<Cell>PersonId</Cell>}
+          cell={ <TableCell data={this.state.patients} field="id" args={[]}/> } width={100} />
+        <Column header={<Cell>Days w/ Events</Cell>} 
+          cell={ <TableCell data={this.state.patients} field='eventPeriods' args={['day']} /> } width={100} />
+        <Column header={<Cell>Months w/ Events</Cell>} 
+          cell={ <TableCell data={this.state.patients} field='eventPeriods' args={['month']} /> } width={100} />
+        <Column header={<Cell>Years w/ Events</Cell>} 
+          cell={ <TableCell data={this.state.patients} field='eventPeriods' args={['year']} /> } width={100} />
       </Table>
     );
   }
@@ -326,10 +333,12 @@ export class Timeline extends Component {
 
   }
   componentDidMount() {
-    const {eras, width, height, opts} = this.props;
+    const {eras, width, height, opts, timelineEvents} = this.props;
     let el = ReactDOM.findDOMNode(this);
     var chart = new d3KitTimeline.Timeline(el, opts);
-
+    for (let e in timelineEvents) {
+      chart.on(e, timelineEvents[e]);
+    }
     chart.data([]);
     this.setState({chart});
   }
