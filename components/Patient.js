@@ -3,13 +3,13 @@ import ReactDOM from 'react-dom';
 import d3KitTimeline from '../d3Kit-timeline/dist/d3Kit-timeline';
 
 function dateRound(date, granularity) {
-  let day = new Date(date.setHours(0));
+  let day = new Date(date).setHours(0);
   if (granularity === 'day')
     return day;
-  let month = new Date(date.setDate(1));
+  let month = new Date(day).setDate(1);
   if (granularity === 'month')
     return month;
-  let year = new Date(month.setMonth(0));
+  let year = new Date(month).setMonth(0);
   if (granularity === 'year')
     return year;
   throw new Error(`unknown granularity: ${granularity}`);
@@ -44,7 +44,7 @@ export class Patient {
           (this._periods[granularity] = _.supergroup(this.eras, 
               d=>dateRound(d.start_date, granularity), {dimName: granularity}));
   }
-  dotTimeline(granularity) {
+  dotTimeline(granularity, timelineEvents) {
     let timelineOpts = 
           {
             dotsOnly: true,
@@ -65,9 +65,9 @@ export class Patient {
           };
     return <Timeline height={150} width={300}
                 opts={timelineOpts}
+                timelineEvents={timelineEvents}
                     eras={this.eventsBy(granularity)}
                   />
-                //timelineEvents={timelineEvents}
   }
   get(field, args) {
     if (typeof field === "function")
@@ -97,9 +97,9 @@ export class Timeline extends Component {
     };
   }
   render() {
-    const {data, width, height} = this.props;
+    const {eras, width, height} = this.props;
     return (<div
-            style={{border:"1px solid blue", 
+            style={{display: (eras && eras.length && 'block' || 'none'),
                     height:height+'px', width:width+'px',
                     fontSize: 10, overflow: 'auto',
                   }}>

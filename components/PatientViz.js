@@ -72,12 +72,18 @@ export default class PatientViz extends Component {
               //${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
     let timelineEvents = {
       labelMouseover: this.labelOver.bind(this),
+      dotMouseover: this.labelOver.bind(this),
     }
     let evtList = this.state.highlightEvts.map(d=><p key={d}>{d}</p>);
     return  <Grid> 
               <Row>
                 <Col md={9}>
-                  <h5>Pt Id {highlightedPatient && highlightedPatient.get('id') || 'N/A'} Conditions</h5>
+                  {patients.table({
+                    granularity, timelineEvents,
+                    highlightedPatient, highlightedPatientIdx,
+                    highlightPatient:this.highlightPatient.bind(this),
+                  })}
+                  <h4>{highlightedPatient && highlightedPatient.desc() || ''}</h4>
                   <Timeline height={height} width={width}
                     opts={timelineOpts}
                     timelineEvents={timelineEvents}
@@ -85,12 +91,6 @@ export default class PatientViz extends Component {
                     eras={highlightedPatient && highlightedPatient.eventsBy(granularity)}
                   >
                   </Timeline>
-                  <h4>{highlightedPatient && highlightedPatient.desc() || ''}</h4>
-                  {patients.table({
-                    granularity,
-                    highlightedPatient, highlightedPatientIdx,
-                    highlightPatient:this.highlightPatient.bind(this),
-                  })}
                 </Col>
                 <Col md={2} mdOffset={1} className="evt-list">
                   {evtList}

@@ -27,6 +27,7 @@ export class PatientGroup extends Array {
     return <PtTable patients={this} 
                     highlightPatient={opts.highlightPatient}
                     granularity={opts.granularity}
+                    timelineEvents={opts.timelineEvents}
            />
   }
 }
@@ -98,15 +99,17 @@ export class PtTable extends React.Component {
         width={800}
         height={250}>
         <Column header={<Cell>PersonId</Cell>}
-          cell={ <TableCell data={this.props.patients} field="id" args={[]}/> } width={100} />
-        <Column header={<Cell>Days w/ Events</Cell>} 
-          cell={ <TableCell data={this.props.patients} field='eventPeriods' args={['day']} /> } width={100} />
-        <Column header={<Cell>Months w/ Events</Cell>} 
-          cell={ <TableCell data={this.props.patients} field='eventPeriods' args={['month']} /> } width={100} />
-        <Column header={<Cell>Years w/ Events</Cell>} 
-          cell={ <TableCell data={this.props.patients} field='eventPeriods' args={['year']} /> } width={100} />
+          cell={ <TableCell data={this.props.patients} field="id" args={[]}/> } width={80} />
+        <Column header={<Cell>Age</Cell>} 
+          cell={ <TableCell data={this.props.patients} field='age' args={[]} /> } width={60} />
+        <Column header={<Cell>Gender</Cell>} 
+          cell={ <TableCell data={this.props.patients} field='gender' args={[]} /> } width={70} />
+        <Column header={<Cell>Race</Cell>} 
+          cell={ <TableCell data={this.props.patients} field='race' args={[]} /> } width={70} />
+        <Column header={<Cell>Ethnicity</Cell>} 
+          cell={ <TableCell data={this.props.patients} field='ethnicity' args={[]} /> } width={100} />
         <Column header={<Cell>Timeline</Cell>} 
-          cell={ <TableCell data={this.props.patients} field='dotTimeline' args={[this.props.granularity]} /> } width={350} />
+          cell={ <TableCell data={this.props.patients} field='dotTimeline' args={[this.props.granularity, this.props.timelineEvents]} /> } width={350} />
       </Table>
     );
   }
