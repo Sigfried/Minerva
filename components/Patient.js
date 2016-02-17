@@ -44,6 +44,31 @@ export class Patient {
           (this._periods[granularity] = _.supergroup(this.eras, 
               d=>dateRound(d.start_date, granularity), {dimName: granularity}));
   }
+  dotTimeline(granularity) {
+    let timelineOpts = 
+          {
+            dotsOnly: true,
+            direction: 'down',
+            initialWidth: 300,
+            initialHeight: 150,
+            layerGap: 30,
+            labella: {
+              //minPos: 100, 
+              maxPos: 300 * .85, //stubWidth: 100,
+              nodeHeight: 25,
+            },
+            timeFn: d => d.valueOf(),
+            textFn: d => `${d.records.length} events`,
+            dotRadius: d => Math.pow(d.records.length, 3/4),
+            dotColor: 'rgba(50, 80, 100, 0.5)',
+            linkColor: 'rgba(50, 80, 100, 0.5)',
+          };
+    return <Timeline height={150} width={300}
+                opts={timelineOpts}
+                    eras={this.eventsBy(granularity)}
+                  />
+                //timelineEvents={timelineEvents}
+  }
   get(field, args) {
     if (typeof field === "function")
       return field(this);
@@ -55,6 +80,14 @@ export class Patient {
       return this[field];
     if (this.eras.length && field in this.eras[0]) // pt.get('race')
       return this.eras[0][field];
+  }
+  desc() {
+    return `
+       Pt Id: ${this.get('id')},
+       Age: ${this.get('age')},
+       Gender: ${this.get('gender')},
+       Race: ${this.get('race')},
+       Ethnicity: ${this.get('ethnicity')}`;
   }
 }
 export class Timeline extends Component {

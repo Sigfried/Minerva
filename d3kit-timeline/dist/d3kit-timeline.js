@@ -46,7 +46,8 @@ function (d3, d3Kit, labella) {
     labelTextColor: '#fff',
     linkColor: '#222',
     labelPadding: {left: 4, right: 4, top: 3, bottom: 2},
-    textYOffset: '0.85em'
+    textYOffset: '0.85em',
+    dotsOnly: false,
   };
 
   var CUSTOM_EVENTS = [
@@ -105,6 +106,9 @@ function (d3, d3Kit, labella) {
       }
       options.scale.range([0, (options.direction==='left' || options.direction==='right') ? skeleton.getInnerHeight() : skeleton.getInnerWidth()]);
 
+      drawDots(data);
+      if (options.dotsOnly) return;
+
       axis.scale(options.scale);
 
       var axisTransform;
@@ -133,8 +137,6 @@ function (d3, d3Kit, labella) {
 
       layers.get('main.axis')
         .call(axis);
-
-      drawDots(data);
 
       var dummyText = layers.get('dummy').append('text')
         .classed('label-text', true);

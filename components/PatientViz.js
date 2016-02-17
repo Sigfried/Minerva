@@ -7,7 +7,7 @@ import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar, Input } from '
 import * as Selector from '../selectors';
 import _, {Supergroup} from 'supergroup-es6';
 import {Patient, Timeline} from './Patient';
-import {PtTable, PatientGroup} from './PatientList';
+import {PatientGroup} from './PatientList';
 //var css = require('css!bootstrap/dist/css/bootstrap.css');
 require("!style!css!less!../style.less");
 require('!style!css!fixed-data-table/dist/fixed-data-table.min.css');
@@ -32,25 +32,25 @@ export default class PatientViz extends Component {
     let apistring = Selector.apiId(apiparams);
     apicall(apistring);
   }
+  componentDidUpdate() {
+    let params = { api:'person_data',datasetLabel:'person_data' };
+    let data = this.props.datasets[Selector.apiId(params)] || [];
+    data.length && this.newData(data);
+  }
   newData(data) {
     const {cacheData, } = this.props;
-    if (this.state.patientsLoaded) return;
+    if (this.state.patientsLoaded) return; // only loading once for now
     let patients = new PatientGroup(data);
     cacheData({apistring:Selector.apiId({api:'patients',datasetLabel:'patients'}), 
                data:patients});
     this.setState({data, patients, patientsLoaded: true});
     return patients;
   }
-  componentDidUpdate() {
-    let params = { api:'person_data',datasetLabel:'person_data' };
-    let data = this.props.datasets[Selector.apiId(params)] || [];
-    data.length && this.newData(data);
-  }
   render() {
     let {width, height, granularity, explorer} = this.props;
     width = (typeof width === "undefined") && 800 || width;
     height = (typeof height === "undefined") && 300 || height;
-    const {patients, showPt} = this.state;
+    const {patients, highlightedPatient, highlightedPatientIdx} = this.state;
     let timelineOpts = 
           {
             direction: 'down',
@@ -70,12 +70,6 @@ export default class PatientViz extends Component {
           };
             //textFn: d => `${d.concept_name}<br/>
               //${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
-    let ptDesc = showPt &&
-      `Pt Id: ${showPt.get('id')},
-       Age: ${showPt.get('age')},
-       Gender: ${showPt.get('gender')},
-       Race: ${showPt.get('race')},
-       Ethnicity: ${showPt.get('ethnicity')}`;
     let timelineEvents = {
       labelMouseover: this.labelOver.bind(this),
     }
@@ -83,19 +77,20 @@ export default class PatientViz extends Component {
     return  <Grid> 
               <Row>
                 <Col md={9}>
-                  <h5>Pt Id {showPt && showPt.get('id') || 'N/A'} Conditions</h5>
+                  <h5>Pt Id {highlightedPatient && highlightedPatient.get('id') || 'N/A'} Conditions</h5>
                   <Timeline height={height} width={width}
                     opts={timelineOpts}
                     timelineEvents={timelineEvents}
-                    //eras={showPt && showPt.lookup("Condition").records}
-                    eras={showPt && showPt.eventsBy(granularity)}
+                    //eras={highlightedPatient && highlightedPatient.lookup("Condition").records}
+                    eras={highlightedPatient && highlightedPatient.eventsBy(granularity)}
                   >
                   </Timeline>
-                  <h4>{ptDesc}</h4>
-                  <PtTable 
-                      patients={patients} 
-                      parent={this}
-                      />
+                  <h4>{highlightedPatient && highlightedPatient.desc() || ''}</h4>
+                  {patients.table({
+                    granularity,
+                    highlightedPatient, highlightedPatientIdx,
+                    highlightPatient:this.highlightPatient.bind(this),
+                  })}
                 </Col>
                 <Col md={2} mdOffset={1} className="evt-list">
                   {evtList}
@@ -106,6 +101,9 @@ export default class PatientViz extends Component {
   labelOver(node) {
     let highlightEvts = node.records.map(d=>d.concept_name);
     this.setState({highlightEvts});
+  }
+  highlightPatient(patient, idx) {
+    this.setState({highlightedPatient:patient, highlightedPatientIdx:idx});
   }
 }
 

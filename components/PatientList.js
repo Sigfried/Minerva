@@ -23,6 +23,12 @@ export class PatientGroup extends Array {
   count() {
     return this.length;
   }
+  table(opts={}) {
+    return <PtTable patients={this} 
+                    highlightPatient={opts.highlightPatient}
+                    granularity={opts.granularity}
+           />
+  }
 }
     /*
     data.forEach(rec=>{
@@ -76,38 +82,31 @@ class TableCell extends React.Component {
   }
 }
 export class PtTable extends React.Component {
-  constructor(props) {
-    super(props);
-    const {patients} = props;
-    this.state = {patients};
-  }
-  componentWillReceiveProps(props) {
-    const {patients} = props;
-    this.setState({patients});
-  }
   ptHover(evt, idx) {
-    let pt = this.state.patients[idx];
+    let pt = this.props.patients[idx];
     let ptId = pt.id;
-    this.props.parent.setState({showPt: pt});
+    this.props.highlightPatient(pt, idx);
     console.log(`highlight pt ${ptId}`);
   }
   render() {
     return (
       <Table
         onRowMouseEnter={this.ptHover.bind(this)}
-        rowsCount={this.state.patients.count()}
-        rowHeight={25}
+        rowsCount={this.props.patients.count()}
+        rowHeight={50}
         headerHeight={50}
         width={800}
         height={250}>
         <Column header={<Cell>PersonId</Cell>}
-          cell={ <TableCell data={this.state.patients} field="id" args={[]}/> } width={100} />
+          cell={ <TableCell data={this.props.patients} field="id" args={[]}/> } width={100} />
         <Column header={<Cell>Days w/ Events</Cell>} 
-          cell={ <TableCell data={this.state.patients} field='eventPeriods' args={['day']} /> } width={100} />
+          cell={ <TableCell data={this.props.patients} field='eventPeriods' args={['day']} /> } width={100} />
         <Column header={<Cell>Months w/ Events</Cell>} 
-          cell={ <TableCell data={this.state.patients} field='eventPeriods' args={['month']} /> } width={100} />
+          cell={ <TableCell data={this.props.patients} field='eventPeriods' args={['month']} /> } width={100} />
         <Column header={<Cell>Years w/ Events</Cell>} 
-          cell={ <TableCell data={this.state.patients} field='eventPeriods' args={['year']} /> } width={100} />
+          cell={ <TableCell data={this.props.patients} field='eventPeriods' args={['year']} /> } width={100} />
+        <Column header={<Cell>Timeline</Cell>} 
+          cell={ <TableCell data={this.props.patients} field='dotTimeline' args={[this.props.granularity]} /> } width={350} />
       </Table>
     );
   }
