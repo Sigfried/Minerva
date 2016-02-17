@@ -1,3 +1,4 @@
+var NO_DB = true;
 var pg = require('pg');
 var webpack = require('webpack');
 var webpackDevMiddleware = require('webpack-dev-middleware');
@@ -12,7 +13,7 @@ var app = new express();
 var port = process.env.PORT || 5000;
 app.use(compression())
 app.use(express.static('static'))
-app.use(express.static('data'));
+//app.use('/data', express.static('static/data'));
 
 var compiler = webpack(config);
 app.use(webpackDevMiddleware(compiler, { noInfo: true, publicPath: config.output.publicPath }));
@@ -27,6 +28,10 @@ app.listen(port, function(error) {
 });
 
 app.get("/data/person_data", function(req, res) {
+  if (NO_DB) {
+    res.sendFile('./static/data/person_data.json',{ root: __dirname });
+    return;
+  }
   var q = 'SELECT * ' +
           'FROM cdm.person_data LIMIT 5000';
   var postprocess = rows=>rows.map(row=> {

@@ -34,3 +34,5 @@ node_modules
 
 codeathon
 .env
+
+/d3kit-timeline/
