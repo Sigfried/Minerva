@@ -38,8 +38,9 @@ function condNames(rec) {
   names.forEach((name, i) => rec['name_' + i] = name);
 }
 function dateRound(date, granularity) {
+  let day = new Date(date.setHours(0));
   if (granularity === 'day')
-    return date; // assume they're already rounded to date
+    return day;
   let month = new Date(date.setDate(1));
   if (granularity === 'month')
     return month;
