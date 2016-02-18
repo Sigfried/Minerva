@@ -62,6 +62,7 @@
     "redux-router": "^1.0.0-beta3",
     "redux-thunk": "^0.1.0",
     "reselect": "^2.0.0",
+    "sparkbars": "0.0.7",
     "style-loader": "^0.13.0",
     "supergroup-es6": "0.0.4",
     "url-loader": "^0.5.6",

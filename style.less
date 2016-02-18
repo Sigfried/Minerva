@@ -5,5 +5,25 @@
 }
 
 .evt-list p {
-  font-size: 70%,
+  font-size: 70%;
+}
+
+.highlighted {
+  border: 1px solid red;
+}
+
+.listicle {
+  white-space: nowrap;
+  .item.background {
+    margin: 1px;
+    overflow-x: hidden;
+    //background-color: pink;
+    background-color: fadeout(color('steelblue'), 75%);
+    width: 100%;
+  }
+  .item.normal {
+    overflow-x: visible;
+    background-color: steelblue;
+    height: 100%;
+  }
 }

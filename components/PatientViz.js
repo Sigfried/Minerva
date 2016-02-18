@@ -8,6 +8,7 @@ import * as Selector from '../selectors';
 import _, {Supergroup} from 'supergroup-es6';
 import {Patient, Timeline} from './Patient';
 import {PatientGroup} from './PatientList';
+import Listicle from './Listicle';
 //var css = require('css!bootstrap/dist/css/bootstrap.css');
 require("!style!css!less!../style.less");
 require('!style!css!fixed-data-table/dist/fixed-data-table.min.css');
@@ -43,7 +44,8 @@ export default class PatientViz extends Component {
     let patients = new PatientGroup(data);
     cacheData({apistring:Selector.apiId({api:'patients',datasetLabel:'patients'}), 
                data:patients});
-    this.setState({data, patients, patientsLoaded: true});
+    let events = _.supergroup(patients.data, ['name_0','person_id']);
+    this.setState({data, patients, patientsLoaded: true, events});
     return patients;
   }
   render() {
@@ -55,7 +57,7 @@ export default class PatientViz extends Component {
           {
             direction: 'down',
             initialWidth: width,
-            initialHeight: 500,
+            initialHeight: 2500,
             layerGap: 30,
             labella: {
               //minPos: 100, 
@@ -75,14 +77,17 @@ export default class PatientViz extends Component {
       dotMouseover: this.labelOver.bind(this),
     }
     let evtList = this.state.highlightEvts.map(d=><p key={d}>{d}</p>);
+    let listicle = <EventListicle width={250} height={300} events={this.state.events} />;
     return  <Grid> 
               <Row>
-                <Col md={9}>
+                <Col md={8}>
                   {patients.table({
                     granularity, timelineEvents,
                     highlightedPatient, highlightedPatientIdx,
                     highlightPatient:this.highlightPatient.bind(this),
                   })}
+
+
                   <h4>{highlightedPatient && highlightedPatient.desc() || ''}</h4>
                   <Timeline height={height} width={width}
                     opts={timelineOpts}
@@ -92,7 +97,8 @@ export default class PatientViz extends Component {
                   >
                   </Timeline>
                 </Col>
-                <Col md={2} mdOffset={1} className="evt-list">
+                <Col md={3} mdOffset={1} className="evt-list">
+                  {listicle}
                   {evtList}
                 </Col>
               </Row>;
@@ -107,3 +113,44 @@ export default class PatientViz extends Component {
   }
 }
 
+class EventListicle extends Component {
+  constructor() {
+    super();
+    this.state = {};
+    this.state.eventFreqFunc = eventFreqFuncs('patients');
+  }
+  render() {
+    const {width, height, events} = this.props;
+    if (! (events && events.length))
+      return <div/>;
+    let radio
+    const buttons = eventFreqFuncs().map((f,i) =>
+        <Input type="radio" name="eventFreqFunc" label={f.label} 
+          defaultChecked={f.label === this.state.eventFreqFunc.label}
+          value={f.func} key={f.label} onClick={()=>this.changeValFunc.bind(this)(f)}
+        />);
+    return <div style={{width, height, overflow:'auto'}}>
+            {buttons}
+            <Listicle  things={events}
+                        valFunc={this.state.eventFreqFunc.func}
+                        width={width}
+                        height={height - 70}
+                        />
+           </div>
+  }
+}
+function eventFreqFuncs(pick) {
+  const all = [
+    { label: 'Patients',
+      key:   'patients',
+      func:   d => d.children.length,
+    },
+    { label: 'Occurrences',
+      key:   'occurrences',
+      func:   d => d.records.length,
+    },
+  ];
+  if (pick)
+    return _.find(all, {key: pick});
+  return all;
+}

@@ -100,8 +100,9 @@ export class Timeline extends Component {
     const {eras, width, height} = this.props;
     return (<div
             style={{display: (eras && eras.length && 'block' || 'none'),
-                    height:height+'px', width:width+'px',
-                    fontSize: 10, overflow: 'auto',
+                    //height:height+'px', 
+                    width:width+'px',
+                    fontSize: 10, //overflow: 'auto',
                   }}>
             </div>);
   }

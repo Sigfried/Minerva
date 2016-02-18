@@ -23,6 +23,9 @@ export class PatientGroup extends Array {
   count() {
     return this.length;
   }
+  facet(dims) {
+    return _.supergroup(this.data, dims);
+  }
   table(opts={}) {
     return <PtTable patients={this} 
                     highlightPatient={opts.highlightPatient}
