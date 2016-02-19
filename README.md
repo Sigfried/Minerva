@@ -1,22 +1,5 @@
-# cassandra
+# Minerva
+Machine for Interactive 'n' Exploratory Research through Visual Analytics
 
-Chronological Analytics, 
+This is just sandbox/prototype code for ideas that will end up in OHDSI eventually.
 
-Interactive PHisualization
-
-pandora?
-Phisual
-Analytics for Research 
-Interactive
-
-visualization sandbox for ohdsi
-
-Minerva
-
-Machine for
-Interactive
-'n'
-Exploratory
-Research through
-Visual 
-Analytics
