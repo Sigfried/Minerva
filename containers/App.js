@@ -46,6 +46,8 @@ class App extends Component {
           cacheData,
           granularity,
           datasets,
+          configChange,
+          router,
         })
     );
     /*

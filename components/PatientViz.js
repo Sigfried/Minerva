@@ -49,10 +49,11 @@ export default class PatientViz extends Component {
     return patients;
   }
   render() {
-    let {width, height, granularity, explorer} = this.props;
+    let {width, height, granularity, configChange, router} = this.props;
     width = (typeof width === "undefined") && 800 || width;
     height = (typeof height === "undefined") && 300 || height;
-    const {patients, highlightedPatient, highlightedPatientIdx} = this.state;
+    const {patients, highlightedPatient, highlightedPatientIdx, 
+            events, highlightEvts} = this.state;
     let timelineOpts = 
           {
             direction: 'down',
@@ -76,12 +77,19 @@ export default class PatientViz extends Component {
       labelMouseover: this.labelOver.bind(this),
       dotMouseover: this.labelOver.bind(this),
     }
-    let evtList = this.state.highlightEvts.map(d=><p key={d}>{d}</p>);
-    let listicle = <EventListicle width={250} height={300} events={this.state.events} />;
+    let evtList = highlightEvts.map(d=><p key={d}>{d}</p>);
+    let listicle = <EventListicle 
+                      router={router}
+                      configChange={configChange}
+                      highlightEvts={highlightEvts}
+                      width={250} height={300} 
+                      events={events} 
+                    />;
     return  <Grid> 
               <Row>
                 <Col md={8}>
                   {patients.table({
+                    patientFilter:null,
                     granularity, timelineEvents,
                     highlightedPatient, highlightedPatientIdx,
                     highlightPatient:this.highlightPatient.bind(this),
@@ -105,11 +113,14 @@ export default class PatientViz extends Component {
             </Grid>;
   }
   labelOver(node) {
+    //NEXT: have this filter the listicle
+    //THEN: listicle highlight filters patient list
     let highlightEvts = node.records.map(d=>d.concept_name);
     this.setState({highlightEvts});
   }
   highlightPatient(patient, idx) {
-    this.setState({highlightedPatient:patient, highlightedPatientIdx:idx});
+    let highlightEvts = patient.allEvts().rawValues();
+    this.setState({highlightedPatient:patient, highlightedPatientIdx:idx, highlightEvts});
   }
 }
 
@@ -119,8 +130,18 @@ class EventListicle extends Component {
     this.state = {};
     this.state.eventFreqFunc = eventFreqFuncs('patients');
   }
+  changeValFunc(eventFreqFunc) {
+    this.setState({eventFreqFunc});
+  }
+  highlight(eventHighlighted) {
+    this.setState({eventHighlighted});
+  }
+  endHighlight(eventHighlighted) {
+  }
+  isHighlighted(eventHighlighted) {
+  }
   render() {
-    const {width, height, events} = this.props;
+    const {width, height, events, highlightEvts, configChange, router} = this.props;
     if (! (events && events.length))
       return <div/>;
     let radio
@@ -129,14 +150,46 @@ class EventListicle extends Component {
           defaultChecked={f.label === this.state.eventFreqFunc.label}
           value={f.func} key={f.label} onClick={()=>this.changeValFunc.bind(this)(f)}
         />);
-    return <div style={{width, height, overflow:'auto'}}>
+    let controls = [ 
+          new ListicleControl('filter', configChange, router),
+          new ListicleControl('indexEvt', configChange, router),
+          new ListicleControl('remove', configChange, router),
+      //<ListicleControl key={0} name="filter"/>,
+      //<ListicleControl key={1} name="indexEvt"/>,
+      //<ListicleControl key={2} name="remove"/>,
+    ];
+    return <div style={{width, height, overflow:'auto', padding: '8px'}}>
             {buttons}
             <Listicle  things={events}
                         valFunc={this.state.eventFreqFunc.func}
+                        controls={controls}
                         width={width}
                         height={height - 70}
-                        />
+                        highlight={this.highlight.bind(this)}
+                        endHighlight={this.endHighlight.bind(this)}
+                        isHighlighted={this.isHighlighted.bind(this)}
+              >
+              </Listicle>
            </div>
+  }
+}
+class ListicleControl {
+  constructor(name, configChange, router) {
+    this.name = name;
+    this.configChange = configChange;
+    this.router = router;
+  }
+  render() {
+    const {name} = this;
+    return <Glyphicon style={{padding:"0px 4px 0px 4px", }} 
+            glyph={ ({filter:'filter', remove:'remove', indexEvt:'object-align-left'})
+                      [name] }
+            />
+  }
+  click(d) {
+    if (this.name === 'indexEvt') {
+      this.configChange(this.router, 'indexEvt', d.toString());
+    }
   }
 }
 function eventFreqFuncs(pick) {

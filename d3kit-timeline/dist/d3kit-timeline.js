@@ -107,7 +107,6 @@ function (d3, d3Kit, labella) {
       options.scale.range([0, (options.direction==='left' || options.direction==='right') ? skeleton.getInnerHeight() : skeleton.getInnerWidth()]);
 
       drawDots(data);
-      if (options.dotsOnly) return;
 
       axis.scale(options.scale);
 
@@ -135,8 +134,14 @@ function (d3, d3Kit, labella) {
       layers.get('main')
         .attr('transform', axisTransform);
 
+      if (options.dotsOnly) 
+        axis.tickValues([]);
+
       layers.get('main.axis')
         .call(axis);
+
+      if (options.dotsOnly) 
+        return;
 
       var dummyText = layers.get('dummy').append('text')
         .classed('label-text', true);

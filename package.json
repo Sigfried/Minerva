@@ -1,18 +1,18 @@
 {
-  "name": "dq-cdm-viz-platform",
-  "version": "0.1.0",
-  "description": "Visual exploration platform for DQ CDM",
+  "name": "minerva",
+  "version": "0.0.1",
+  "description": "Machine for Interactive 'n' Exploratory Research through Visual Analytics",
   "scripts": {
     "start": "node server.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/DQCode-A-Thon/platform"
+    "url": "https://github.com/Sigfried/minerva"
   },
   "engines": {
     "node": "5.0.0"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "homepage": "http://infovizconsulting.com",
   "dependencies": {
     "babel-core": "^5.6.18",

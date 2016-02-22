@@ -17,15 +17,17 @@ require("!style!css!less!../style.less");
  *          
  */
 export default class Listicle extends Component {
+  /*
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.things != nextProps.things ||
            this.props.selected != nextProps.selected ||
            this.props.highlighted != nextProps.highlighted;
   }
+  */
   render() {
     const {passthrough, width, height, 
         isHighlighted, highlight, endHighlight, 
-        valFunc=d=>d, sortBy} = this.props;
+        valFunc=d=>d, sortBy, controls} = this.props;
     const things = this.props.things.sort((a,b)=>(sortBy||valFunc)(b)-(sortBy||valFunc)(a));
 
     // not sure what's going wrong with sorting... going without for now
@@ -40,6 +42,7 @@ export default class Listicle extends Component {
                 passthrough={passthrough}
                 thing={thing}
                 valFunc={valFunc}
+                controls={controls}
                 isHighlighted={isHighlighted}
                 highlight={highlight}
                 endHighlight={endHighlight}
@@ -64,24 +67,28 @@ class Item extends Component {
     render() {
       let {passthrough, thing, valFunc, orientation, 
         i, xScale, chartHeight, chartWidth, highlight, 
-        isHighlighted, endHighlight} = this.props;
+        isHighlighted, endHighlight, controls} = this.props;
       highlight = highlight || _.noop;
       isHighlighted = isHighlighted || _.noop;
       endHighlight = endHighlight || _.noop;
       let highlighted = isHighlighted(thing,passthrough,i)
       let barWidth = xScale(valFunc(thing, i));
+      let controlSpans = controls.map( d=>
+              <span onClick={()=>d.click(thing)}
+              key={d.name}>{d.render()}</span>);
       return (
         <div className={'background item ' + (highlighted ? 'highlighted' : '')}
               onMouseOver={evt=>highlight(thing,passthrough,i, evt)}
               onMouseOut={evt=>endHighlight(thing,passthrough,i, evt)}
           >
-            <div className={'normal item ' + (highlighted ? 'highlighted' : '')}
+            {controlSpans}
+            <span className={'normal item ' + (highlighted ? 'highlighted' : '')}
                   style={{width:barWidth}}
                   onMouseOver={evt=>highlight(thing,passthrough,i, evt)}
                   onMouseOut={evt=>endHighlight(thing,passthrough,i, evt)}
             >
                 {thing.toString()}
-            </div>
+            </span>
           </div>
       );
     }

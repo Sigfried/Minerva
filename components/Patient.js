@@ -44,6 +44,10 @@ export class Patient {
           (this._periods[granularity] = _.supergroup(this.eras, 
               d=>dateRound(d.start_date, granularity), {dimName: granularity}));
   }
+  allEvts() {
+    return this._allEvts ||
+          (this._allEvts = _.supergroup(this.eras, 'name_0'));
+  }
   dotTimeline(granularity, timelineEvents) {
     let timelineOpts = 
           {

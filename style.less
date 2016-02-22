@@ -13,17 +13,20 @@
 }
 
 .listicle {
+  border: 1px solid darkgray;
   white-space: nowrap;
   .item.background {
+    padding: 0px;
     margin: 1px;
     overflow-x: hidden;
     //background-color: pink;
-    background-color: fadeout(color('steelblue'), 75%);
+    background-color: fadeout(color('steelblue'), 85%);
     width: 100%;
   }
   .item.normal {
+    padding-left: 5px;
     overflow-x: visible;
-    background-color: steelblue;
+    background-color: fadeout(color('steelblue'), 45%);
     height: 100%;
   }
 }

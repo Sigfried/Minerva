@@ -20,15 +20,24 @@ export class PatientGroup extends Array {
     this.push(...patients);
     this.data = data;
   }
+  filter(filt) {
+    return Object.setPrototypeOf(Array.filter(this, filt), PatientGroup.prototype);
+  }
   count() {
     return this.length;
   }
   facet(dims) {
     return _.supergroup(this.data, dims);
   }
+  rowHighlight(idx, highlightedPatientIdx) {
+    if (idx === highlightedPatientIdx)
+      return "highlighted";
+  }
   table(opts={}) {
-    return <PtTable patients={this} 
+    let filter = opts.patientFilter || ()=>true;
+    return <PtTable patients={this.filter(filter)} 
                     highlightPatient={opts.highlightPatient}
+                    rowHighlight={(idx)=>this.rowHighlight.bind(this)(idx,opts.highlightedPatientIdx)}
                     granularity={opts.granularity}
                     timelineEvents={opts.timelineEvents}
            />
@@ -90,29 +99,30 @@ export class PtTable extends React.Component {
     let pt = this.props.patients[idx];
     let ptId = pt.id;
     this.props.highlightPatient(pt, idx);
-    console.log(`highlight pt ${ptId}`);
   }
   render() {
+    const {patients, granularity, timelineEvents, rowHighlight} = this.props;
     return (
       <Table
         onRowMouseEnter={this.ptHover.bind(this)}
-        rowsCount={this.props.patients.count()}
+        rowClassNameGetter={rowHighlight}
+        rowsCount={patients.count()}
         rowHeight={50}
         headerHeight={50}
         width={800}
         height={250}>
         <Column header={<Cell>PersonId</Cell>}
-          cell={ <TableCell data={this.props.patients} field="id" args={[]}/> } width={80} />
+          cell={ <TableCell data={patients} field="id" args={[]}/> } width={80} />
         <Column header={<Cell>Age</Cell>} 
-          cell={ <TableCell data={this.props.patients} field='age' args={[]} /> } width={60} />
+          cell={ <TableCell data={patients} field='age' args={[]} /> } width={60} />
         <Column header={<Cell>Gender</Cell>} 
-          cell={ <TableCell data={this.props.patients} field='gender' args={[]} /> } width={70} />
+          cell={ <TableCell data={patients} field='gender' args={[]} /> } width={70} />
         <Column header={<Cell>Race</Cell>} 
-          cell={ <TableCell data={this.props.patients} field='race' args={[]} /> } width={70} />
+          cell={ <TableCell data={patients} field='race' args={[]} /> } width={70} />
         <Column header={<Cell>Ethnicity</Cell>} 
-          cell={ <TableCell data={this.props.patients} field='ethnicity' args={[]} /> } width={100} />
+          cell={ <TableCell data={patients} field='ethnicity' args={[]} /> } width={100} />
         <Column header={<Cell>Timeline</Cell>} 
-          cell={ <TableCell data={this.props.patients} field='dotTimeline' args={[this.props.granularity, this.props.timelineEvents]} /> } width={350} />
+          cell={ <TableCell data={patients} field='dotTimeline' args={[granularity, timelineEvents]} /> } width={350} />
       </Table>
     );
   }
