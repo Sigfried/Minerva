@@ -78,7 +78,6 @@ export default class PatientViz extends Component {
             dotColor: dot => {
               let highlighted = _.any(dot.children,
                     evt=> _.contains(this.getHighlightedEvts(), evt.toString())); // SLOW!
-              console.log(this.getHighlightedEvts().length, highlighted);
               return highlighted ?  'rgba(70, 120, 140, 0.7)' : 'rgba(50, 80, 100, 0.4)';
             },
             linkColor: 'rgba(50, 80, 100, 0.5)',
@@ -86,13 +85,14 @@ export default class PatientViz extends Component {
             //textFn: d => `${d.concept_name}<br/>
               //${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
     let timelineEvents = {
-      labelMouseover: this.labelOver.bind(this),
-      dotMouseover: this.labelOver.bind(this),
+      labelMouseover: this.labelHover.bind(this),
+      dotMouseover: this.labelHover.bind(this),
     }
     let evtList = highlightEvts.map(d=><p key={d}>{d}</p>);
     let listicle = <EventListicle 
                       router={router}
                       configChange={configChange}
+                      evtHover={this.evtHover.bind(this)}
                       highlightEvts={highlightEvts}
                       width={250} height={300} 
                       events={events} 
@@ -124,10 +124,13 @@ export default class PatientViz extends Component {
               </Row>;
             </Grid>;
   }
-  labelOver(node) {
-    //NEXT: have this filter the listicle
+  labelHover(node) {
+    let highlightEvts = node.children.map(String); // labels/dots have event children
+    this.setState({highlightEvts});
+  }
+  evtHover(node) {
     //THEN: listicle highlight filters patient list
-    let highlightEvts = node.children.map(String);
+    let highlightEvts = [node.toString()];
     this.setState({highlightEvts});
   }
   highlightPatient(patient, idx) {
@@ -146,14 +149,35 @@ class EventListicle extends Component {
     this.setState({eventFreqFunc});
   }
   highlight(eventHighlighted) {
+    this.props.evtHover(eventHighlighted);
     this.setState({eventHighlighted});
   }
   endHighlight(eventHighlighted) {
+    this.setState({eventHighlighted: null});
   }
   isHighlighted(eventHighlighted) {
+    return eventHighlighted === this.state.eventHighlighted;
+  }
+  eventClass(event) {
+    const {highlightEvts} = this.props;
+    const {eventHighlighted} = this.state;
+    if (eventHighlighted) {
+      if (event.toString() === eventHighlighted) {
+        return 'highlighted';
+      } else {
+        return 'grayout';
+      }
+    } else {
+      if (_.contains(highlightEvts, event.toString())) {
+        return 'highlighted';
+      } else {
+        return 'grayout';
+      }
+    }
   }
   render() {
-    const {width, height, events, highlightEvts, configChange, router} = this.props;
+    const {width, height, events, highlightEvts, eventHighlighted,
+            configChange, router, evtHover} = this.props;
     if (! (events && events.length))
       return <div/>;
     let radio
@@ -172,13 +196,18 @@ class EventListicle extends Component {
     ];
     return <div style={{width, height, overflow:'auto', padding: '8px'}}>
             {buttons}
-            <Listicle  things={events.filter(d=>_.contains(highlightEvts, d.toString()))}
+            <Listicle  
+                        //things={events.filter(d=>_.contains(highlightEvts, d.toString()))}
+                        things={events}
+                        itemClass={this.eventClass.bind(this)}
+                        //eventHighlighted={eventHighlighted}
                         valFunc={this.state.eventFreqFunc.func}
+                        evtHover={evtHover}
                         controls={controls}
                         width={width}
                         height={height - 70}
-                        highlight={this.highlight.bind(this)}
-                        endHighlight={this.endHighlight.bind(this)}
+                        hover={this.highlight.bind(this)}
+                        endHover={this.endHighlight.bind(this)}
                         isHighlighted={this.isHighlighted.bind(this)}
               >
               </Listicle>

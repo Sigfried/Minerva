@@ -8,7 +8,7 @@ require("!style!css!less!../style.less");
  * valFunc => func(thing, i) returning a number that gives relative height of bar
  *
  * optional functions to call if a bar is hovered over:
- *    highlight, endHighlight => func(thing,passthrough,i,mouseEvent)
+ *    hover, endHover => func(thing,passthrough,i,mouseEvent)
  * optional function to determine if a bar should be highlighted:
  *    isHighlighted => func(thing,passthrough,i)
  * 
@@ -26,8 +26,8 @@ export default class Listicle extends Component {
   */
   render() {
     const {passthrough, width, height, 
-        isHighlighted, highlight, endHighlight, 
-        valFunc=d=>d, sortBy, controls} = this.props;
+        isHighlighted, hover, endHover, 
+        valFunc=d=>d, sortBy, controls, itemClass} = this.props;
     const things = this.props.things.sort((a,b)=>(sortBy||valFunc)(b)-(sortBy||valFunc)(a));
 
     // not sure what's going wrong with sorting... going without for now
@@ -43,9 +43,10 @@ export default class Listicle extends Component {
                 thing={thing}
                 valFunc={valFunc}
                 controls={controls}
+                itemClass={itemClass}
                 isHighlighted={isHighlighted}
-                highlight={highlight}
-                endHighlight={endHighlight}
+                hover={hover}
+                endHover={endHover}
                 chartWidth={width}
                 xScale={xScale}
                 i={i}
@@ -66,26 +67,28 @@ Listicle.propTypes = {
 class Item extends Component {
     render() {
       let {passthrough, thing, valFunc, orientation, 
-        i, xScale, chartHeight, chartWidth, highlight, 
-        isHighlighted, endHighlight, controls} = this.props;
-      highlight = highlight || _.noop;
+        i, xScale, chartHeight, chartWidth, hover, 
+        isHighlighted, endHover, controls, itemClass} = this.props;
+      hover = hover || _.noop;
       isHighlighted = isHighlighted || _.noop;
-      endHighlight = endHighlight || _.noop;
+      endHover = endHover || _.noop;
       let highlighted = isHighlighted(thing,passthrough,i)
       let barWidth = xScale(valFunc(thing, i));
       let controlSpans = controls.map( d=>
               <span onClick={()=>d.click(thing)}
               key={d.name}>{d.render()}</span>);
+      let className = itemClass ? itemClass(thing) : '';
       return (
-        <div className={'background item ' + (highlighted ? 'highlighted' : '')}
-              onMouseOver={evt=>highlight(thing,passthrough,i, evt)}
-              onMouseOut={evt=>endHighlight(thing,passthrough,i, evt)}
+        <div className={'background item ' + className}
+              style={{cursor:'pointer'}}
+              onMouseOver={evt=>hover(thing,passthrough,i, evt)}
+              onMouseOut={evt=>endHover(thing,passthrough,i, evt)}
           >
             {controlSpans}
-            <span className={'normal item ' + (highlighted ? 'highlighted' : '')}
-                  style={{width:barWidth}}
-                  onMouseOver={evt=>highlight(thing,passthrough,i, evt)}
-                  onMouseOut={evt=>endHighlight(thing,passthrough,i, evt)}
+            <span className={'normal item ' + className}
+                  style={{width:barWidth, cursor:'pointer'}}
+                  onMouseOver={evt=>hover(thing,passthrough,i, evt)}
+                  onMouseOut={evt=>endHover(thing,passthrough,i, evt)}
             >
                 {thing.toString()}
             </span>

@@ -70,7 +70,6 @@ export class Patient {
             dotColor: dot => {
               let highlighted = _.any(dot.children,
                     evt=> _.contains(this.opts.getHighlightedEvts(), evt.toString())); // SLOW!
-              console.log(this.opts.getHighlightedEvts().length, highlighted);
               //return highlighted ?  'rgba(150, 80, 100, 0.9)' : 'rgba(50, 80, 100, 0.4)';
               return highlighted ?  'rgba(70, 130, 150, 0.8)' : 'rgba(50, 80, 100, 0.2)';
             },
