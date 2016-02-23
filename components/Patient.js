@@ -15,9 +15,10 @@ function dateRound(date, granularity) {
   throw new Error(`unknown granularity: ${granularity}`);
 }
 export class Patient {
-  constructor(id, eras) {
+  constructor(id, eras, opts) {
     this.id = id;
     this.eras = eras;
+    this.opts = opts;
     this._periods = {};
   }
   dateRange() {
@@ -42,11 +43,12 @@ export class Patient {
   periods(granularity) {
     return this._periods[granularity] || 
           (this._periods[granularity] = _.supergroup(this.eras, 
-              d=>dateRound(d.start_date, granularity), {dimName: granularity}));
+              [d=>dateRound(d.start_date, granularity), 'name_0'], 
+                {dimNames: [granularity, 'name_0']}));
   }
   allEvts() {
-    return this._allEvts ||
-          (this._allEvts = _.supergroup(this.eras, 'name_0'));
+    this._allEvts = this._allEvts || _.supergroup(this.eras, 'name_0');
+    return this._allEvts;
   }
   dotTimeline(granularity, timelineEvents) {
     let timelineOpts = 
@@ -64,7 +66,14 @@ export class Patient {
             timeFn: d => d.valueOf(),
             textFn: d => `${d.records.length} events`,
             dotRadius: d => Math.pow(d.records.length, 3/4),
-            dotColor: 'rgba(50, 80, 100, 0.5)',
+            //dotColor: 'rgba(50, 80, 100, 0.5)',
+            dotColor: dot => {
+              let highlighted = _.any(dot.children,
+                    evt=> _.contains(this.opts.getHighlightedEvts(), evt.toString())); // SLOW!
+              console.log(this.opts.getHighlightedEvts().length, highlighted);
+              //return highlighted ?  'rgba(150, 80, 100, 0.9)' : 'rgba(50, 80, 100, 0.4)';
+              return highlighted ?  'rgba(70, 130, 150, 0.8)' : 'rgba(50, 80, 100, 0.2)';
+            },
             linkColor: 'rgba(50, 80, 100, 0.5)',
           };
     return <Timeline height={150} width={300}

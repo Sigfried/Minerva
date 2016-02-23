@@ -47,9 +47,6 @@ export class TimelineNOTUSING extends Component {
     const {eras, width, height, opts} = this.props;
     let el = ReactDOM.findDOMNode(this);
     var chart = new d3KitTimeline.Timeline(el, opts);
-    d3.select(el).selectAll('.axis')
-      .style('fill','white')
-      .style('stroke','black');
 
     chart.data([]);
     this.setState({chart});

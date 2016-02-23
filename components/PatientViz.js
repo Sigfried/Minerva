@@ -20,7 +20,9 @@ export default class PatientViz extends Component {
   constructor() {
     super();
     this.state = {
-      patients: new PatientGroup([]),
+      patients: new PatientGroup([], {
+        getHighlightedEvts: this.getHighlightedEvts.bind(this), }
+                                ),
       highlightEvts: [],
     };
   }
@@ -41,12 +43,16 @@ export default class PatientViz extends Component {
   newData(data) {
     const {cacheData, } = this.props;
     if (this.state.patientsLoaded) return; // only loading once for now
-    let patients = new PatientGroup(data);
+    let patients = new PatientGroup(data, {
+        getHighlightedEvts: this.getHighlightedEvts.bind(this), });
     cacheData({apistring:Selector.apiId({api:'patients',datasetLabel:'patients'}), 
                data:patients});
     let events = _.supergroup(patients.data, ['name_0','person_id']);
     this.setState({data, patients, patientsLoaded: true, events});
     return patients;
+  }
+  getHighlightedEvts() {
+    return this.state.highlightEvts;
   }
   render() {
     let {width, height, granularity, configChange, router} = this.props;
@@ -68,7 +74,13 @@ export default class PatientViz extends Component {
             timeFn: d => d.valueOf(),
             textFn: d => `${d.records.length} events`,
             dotRadius: d => Math.pow(d.records.length, 3/4),
-            dotColor: 'rgba(50, 80, 100, 0.5)',
+            //dotColor: 'rgba(50, 80, 100, 0.5)',
+            dotColor: dot => {
+              let highlighted = _.any(dot.children,
+                    evt=> _.contains(this.getHighlightedEvts(), evt.toString())); // SLOW!
+              console.log(this.getHighlightedEvts().length, highlighted);
+              return highlighted ?  'rgba(70, 120, 140, 0.7)' : 'rgba(50, 80, 100, 0.4)';
+            },
             linkColor: 'rgba(50, 80, 100, 0.5)',
           };
             //textFn: d => `${d.concept_name}<br/>
@@ -115,7 +127,7 @@ export default class PatientViz extends Component {
   labelOver(node) {
     //NEXT: have this filter the listicle
     //THEN: listicle highlight filters patient list
-    let highlightEvts = node.records.map(d=>d.concept_name);
+    let highlightEvts = node.children.map(String);
     this.setState({highlightEvts});
   }
   highlightPatient(patient, idx) {
@@ -151,16 +163,16 @@ class EventListicle extends Component {
           value={f.func} key={f.label} onClick={()=>this.changeValFunc.bind(this)(f)}
         />);
     let controls = [ 
-          new ListicleControl('filter', configChange, router),
-          new ListicleControl('indexEvt', configChange, router),
+          new ListicleControl('check', configChange, router),
           new ListicleControl('remove', configChange, router),
+          new ListicleControl('indexEvt', configChange, router),
       //<ListicleControl key={0} name="filter"/>,
       //<ListicleControl key={1} name="indexEvt"/>,
       //<ListicleControl key={2} name="remove"/>,
     ];
     return <div style={{width, height, overflow:'auto', padding: '8px'}}>
             {buttons}
-            <Listicle  things={events}
+            <Listicle  things={events.filter(d=>_.contains(highlightEvts, d.toString()))}
                         valFunc={this.state.eventFreqFunc.func}
                         controls={controls}
                         width={width}
@@ -182,7 +194,7 @@ class ListicleControl {
   render() {
     const {name} = this;
     return <Glyphicon style={{padding:"0px 4px 0px 4px", }} 
-            glyph={ ({filter:'filter', remove:'remove', indexEvt:'object-align-left'})
+            glyph={ ({check:'ok-circle', remove:'remove-circle', indexEvt:'object-align-left'})
                       [name] }
             />
   }

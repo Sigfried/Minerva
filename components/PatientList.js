@@ -3,7 +3,7 @@ import { Table, Column, Cell } from 'fixed-data-table';
 import {Patient, Timeline} from './Patient';
 
 export class PatientGroup extends Array {
-  constructor(rawData) {
+  constructor(rawData, opts={}) {
     /* expecting (for now) data like:
     "person_id","age","gender","race","ethnicity","era_start_date","era_end_date","domain_id","concept_name","pt_concept_name","hlt_concept_name","hlgt_concept_name","soc_concept_name","concept_id","concept_code"
     0,83,"Male","White","Not Hispanic or Latino","2008-02-19","2008-02-19","Condition","Impacted cerumen","External ear disorders NEC","External ear disorders (excl congenital)","","",374375,"18070006" */
@@ -15,7 +15,7 @@ export class PatientGroup extends Array {
       return rec;
     });
     let pts = _.supergroup(data, 'person_id');
-    let patients = pts.map(pt=>new Patient(pt.valueOf(), pt.records));
+    let patients = pts.map(pt=>new Patient(pt.valueOf(), pt.records, opts));
     super();
     this.push(...patients);
     this.data = data;
@@ -122,7 +122,8 @@ export class PtTable extends React.Component {
         <Column header={<Cell>Ethnicity</Cell>} 
           cell={ <TableCell data={patients} field='ethnicity' args={[]} /> } width={100} />
         <Column header={<Cell>Timeline</Cell>} 
-          cell={ <TableCell data={patients} field='dotTimeline' args={[granularity, timelineEvents]} /> } width={350} />
+          cell={ <TableCell data={patients} field='dotTimeline' 
+            args={[granularity, timelineEvents]} /> } width={350} />
       </Table>
     );
   }
