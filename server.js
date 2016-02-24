@@ -48,17 +48,21 @@ app.get("/data/person_data", function(req, res) {
             let evt = byEvt.lookup(req.query.indexEvt);
             console.log(`${evt.children.length} patients with ${evt}`);
             let cohortIds = evt.children.rawValues();
+            let indexDates = [];
+            evt.children.forEach(p=>{
+              let pid = Number(p);
+              indexDates[pid]= new Date();
+              p.records.forEach(r=>{
+                indexDates[pid] = Math.min(r.start_date, indexDates[pid]);
+              });
+            })
             let cohortRecs = data.filter(d=>_.contains(cohortIds,d.person_id));
             let pts = _.supergroup(cohortRecs,'person_id');
             pts.forEach(p=>{
-              p.index_date = new Date();
+              let pid = Number(p);
               p.records.forEach(r=>{
-                p.index_date = Math.min(r.start_date, p.index_date);
-              });
-            })
-            pts.forEach(p=>{
-              p.records.forEach(r=>{
-                r.days_from_index = daysDiff(p.index_date, r.start_date)
+                r.days_from_index = daysDiff(indexDates[pid], r.start_date)
+                r.index_date = indexDates[pid];
               });
             });
             res.json(pts.records);

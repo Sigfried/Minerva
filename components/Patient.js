@@ -2,6 +2,16 @@ import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import d3KitTimeline from '../d3Kit-timeline/dist/d3Kit-timeline';
 
+function dateRound(offset, granularity) {
+  if (granularity === 'day')
+    return offset;
+  if (granularity === 'month')
+    return Math.round(offset / 365.25 * 12);
+  if (granularity === 'year')
+    return Math.round(offset / 365.25);
+  throw new Error(`unknown granularity: ${granularity}`);
+}
+/*
 function dateRound(date, granularity) {
   let day = new Date(date).setHours(0);
   if (granularity === 'day')
@@ -14,6 +24,7 @@ function dateRound(date, granularity) {
     return year;
   throw new Error(`unknown granularity: ${granularity}`);
 }
+*/
 export class Patient {
   constructor(id, eras, opts) {
     this.id = id;
@@ -24,8 +35,8 @@ export class Patient {
   dateRange() {
     return this._date_range || 
           (this._data_range = [
-            _.min(this.eras.map(d=>d.start_date)),
-            _.max(this.eras.map(d=>d.end_date)),
+            _.min(this.eras.map(d=>d.days_from_index)),
+            _.max(this.eras.map(d=>d.days_from_index)),
           ]);
   }
   eventDays() {
@@ -43,7 +54,7 @@ export class Patient {
   periods(granularity) {
     return this._periods[granularity] || 
           (this._periods[granularity] = _.supergroup(this.eras, 
-              [d=>dateRound(d.start_date, granularity), 'name_0'], 
+              [d=>dateRound(d.days_from_index, granularity), 'name_0'], 
                 {dimNames: [granularity, 'name_0']}));
   }
   allEvts() {

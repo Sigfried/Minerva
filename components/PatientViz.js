@@ -96,6 +96,7 @@ export default class PatientViz extends Component {
               maxPos: width * .85, //stubWidth: 100,
               nodeHeight: 25,
             },
+            scale: d3.scale.linear(),
             timeFn: d => d.valueOf(),
             textFn: d => `${d.records.length} events`,
             dotRadius: d => Math.pow(d.records.length, 3/4),
