@@ -23,7 +23,8 @@ export default class PatientViz extends Component {
       patients: new PatientGroup([], {
         getHighlightedEvts: this.getHighlightedEvts.bind(this), }
                                 ),
-      highlightEvts: [],
+      highlightEvts: [], // groups of evts from pt or pt time period
+      highlightEvt: null,// single evt highlighted from EventListicle
     };
   }
   componentWillMount() {
@@ -59,7 +60,7 @@ export default class PatientViz extends Component {
     width = (typeof width === "undefined") && 800 || width;
     height = (typeof height === "undefined") && 300 || height;
     const {patients, highlightedPatient, highlightedPatientIdx, 
-            events, highlightEvts} = this.state;
+            events, highlightEvts, highlightEvt} = this.state;
     let timelineOpts = 
           {
             direction: 'down',
@@ -88,18 +89,23 @@ export default class PatientViz extends Component {
       labelMouseover: this.labelHover.bind(this),
       dotMouseover: this.labelHover.bind(this),
     }
-    let evtList = highlightEvts.map(d=><p key={d}>{d}</p>);
+    let evtList = highlightEvts.map(d=><p key={d.toString()}>{d.toString()}</p>);
     let listicle = <EventListicle 
                       router={router}
                       configChange={configChange}
                       evtHover={this.evtHover.bind(this)}
                       highlightEvts={highlightEvts}
+                      highlightEvt={highlightEvt && highlightEvt.toString()}
                       width={250} height={300} 
                       events={events} 
                     />;
+    let info = highlightEvt && <h5>{highlightEvt.children.length} patients 
+              with {highlightEvt.records.length} (total) {highlightEvt.toString()}</h5> 
+                || '';
     return  <Grid> 
               <Row>
                 <Col md={8}>
+                  {info}
                   {patients.table({
                     patientFilter:null,
                     granularity, timelineEvents,
@@ -126,12 +132,11 @@ export default class PatientViz extends Component {
   }
   labelHover(node) {
     let highlightEvts = node.children.map(String); // labels/dots have event children
-    this.setState({highlightEvts});
+    this.setState({highlightEvts, highlightEvt: null});
   }
-  evtHover(node) {
+  evtHover(highlightEvt) { // WHAT ABOUT END HOVER?
     //THEN: listicle highlight filters patient list
-    let highlightEvts = [node.toString()];
-    this.setState({highlightEvts});
+    this.setState({highlightEvts: [highlightEvt], highlightEvt});
   }
   highlightPatient(patient, idx) {
     let highlightEvts = patient.allEvts().rawValues();
@@ -150,17 +155,17 @@ class EventListicle extends Component {
   }
   highlight(eventHighlighted) {
     this.props.evtHover(eventHighlighted);
-    this.setState({eventHighlighted});
+    //this.setState({eventHighlighted}); FIX
   }
   endHighlight(eventHighlighted) {
-    this.setState({eventHighlighted: null});
+    //this.setState({eventHighlighted: null}); FIX
   }
   isHighlighted(eventHighlighted) {
-    return eventHighlighted === this.state.eventHighlighted;
+    return eventHighlighted === this.props.eventHighlighted;
   }
   eventClass(event) {
-    const {highlightEvts} = this.props;
-    const {eventHighlighted} = this.state;
+    const {highlightEvts, eventHighlighted} = this.props;
+    //const {eventHighlighted} = this.state;
     if (eventHighlighted) {
       if (event.toString() === eventHighlighted) {
         return 'highlighted';

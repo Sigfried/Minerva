@@ -29,7 +29,7 @@ app.listen(port, function(error) {
 
 app.get("/data/person_data", function(req, res) {
   if (NO_DB) {
-    res.sendFile('./static/data/person_data.json',{ root: __dirname });
+    res.sendFile('./static/data/person_data_all.json',{ root: __dirname });
     return;
   }
   var q = 'SELECT * ' +
