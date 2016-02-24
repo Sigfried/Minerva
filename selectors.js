@@ -7,21 +7,11 @@ export const locQuery = state => createSelector(
   loc,
   state => loc.query || {}
 );
-export const schema = createSelector(
-  locQuery,
-  state => locQuery.schema || 'phis_dq'
-);
-
 let exp = {};
 exp.recs = state => state.recs;
 exp.rawDims = state => state.dims;
 exp.dimList = state => state.dimList;
 
-/*
-exp.schema = state => {
-  return state.router.location.query.schema || state.config.schema;
-};
-*/
 exp.dimsetset = state => {
   return state.router.location.query.dimsetset || 
     state.datasets.dimsetsets.length &&
@@ -124,22 +114,31 @@ export const explorer = state => {
 
 // OTHER STUFF, not really selectors
 //
+export function apiurl(path, query) {
+  let qs = _.chain(query).pairs()
+              .map(d=>d.join('='))
+              .join('&').value();
+  let url = path + '?' + qs;
+  return url;
+}
+
+/*
 export const apiId = params => {
-  const {api, datasetLabel, schema, where} = params;
-  return [api, datasetLabel, schema, 
-    JSON.stringify(where||'{}').replace(/"/g,'')].join('##');
+  const {api, datasetLabel, where} = params;
+  return [api, datasetLabel,
+    JSON.stringify(where||'{}')].join('##');
+    //JSON.stringify(where||'{}').replace(/"/g,'')].join('##');
 };
 export const parseApiId = str => {
-  let [api, datasetLabel, schema, where] = str.split('##');
+  let [api, datasetLabel, where] = str.split('##');
   try {
-  return ({api, datasetLabel, schema,
+  return ({api, datasetLabel, 
             where: JSON.parse(where || '{}')});
   } catch(e) {
     debugger;
   }
 };
 
-/*
 export const dimVals = (dim, recs) =>
   _.supergroup(recs, dim.func || dim.field)
       .sortBy(dim.sortBy || (a=>-a.records.length))

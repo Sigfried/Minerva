@@ -28,26 +28,49 @@ export default class PatientViz extends Component {
     };
   }
   componentWillMount() {
-    this.getData();
+    console.log("ptviz mount");
+    this.requestData(true);
   }
-  getData() {
-    const {apicall, } = this.props;
-    let apiparams = { api:'person_data',datasetLabel:'person_data' };
-    let apistring = Selector.apiId(apiparams);
-    apicall(apistring);
+  requestData(forceRequest) {
+    const {apicall, router } = this.props;
+    console.log("in ptviz requestData");
+    let status = apicall('/data/person_data', router.location.query);
+    //console.log(`fetching: ${apistring}; status: ${status}`);
+    if (status !== "ready" && !this.state.newDataComing) {
+      console.log(`it's new data not ready`);
+      this.setState({newDataComing: true});
+    } else if (this.state.newDataComing && status === "ready") {
+      console.log(`new data ready`);
+      this.setState({newDataComing: false});
+      let data = this.props.datasets[Selector.apiurl('/data/person_data', router.location.query)] || [];
+      data.length && this.newData(data);
+    }
+    return status;
+
+    if (forceRequest || this.state.currentQuery !== router.location.search) {
+      console.log("and requesting data");
+      console.log(`because ${forceRequest && 'being forced '}
+                           query was: ${this.state.currentQuery},
+                           query is: ${router.location.search}`);
+      this.setState({currentQuery: router.location.search});
+      //let apiparams = { api:'person_data', where:router.location.query };
+      //let apistring = Selector.apiId(apiparams);
+      //console.log(`fetching? ${apistring}`);
+      let status = apicall('/data/person_data', router.location.query);
+      return status;
+    }
   }
   componentDidUpdate() {
-    let params = { api:'person_data',datasetLabel:'person_data' };
-    let data = this.props.datasets[Selector.apiId(params)] || [];
-    data.length && this.newData(data);
+    console.log("in ptviz didUpdate");
+    this.requestData(true);
   }
   newData(data) {
     const {cacheData, } = this.props;
     if (this.state.patientsLoaded) return; // only loading once for now
     let patients = new PatientGroup(data, {
         getHighlightedEvts: this.getHighlightedEvts.bind(this), });
-    cacheData({apistring:Selector.apiId({api:'patients',datasetLabel:'patients'}), 
-               data:patients});
+    cacheData({key:'patients', data:patients});
+      //{apistring:Selector.apiId({api:'patients'}), data:patients});
     let events = _.supergroup(patients.data, ['name_0','person_id']);
     this.setState({data, patients, patientsLoaded: true, events});
     return patients;
@@ -56,6 +79,7 @@ export default class PatientViz extends Component {
     return this.state.highlightEvts;
   }
   render() {
+    console.log("ptviz render");
     let {width, height, granularity, configChange, router} = this.props;
     width = (typeof width === "undefined") && 800 || width;
     height = (typeof height === "undefined") && 300 || height;

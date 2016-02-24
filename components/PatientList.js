@@ -3,10 +3,11 @@ import { Table, Column, Cell } from 'fixed-data-table';
 import {Patient, Timeline} from './Patient';
 
 export class PatientGroup extends Array {
-  constructor(rawData, opts={}) {
+  constructor(data, opts={}) {
     /* expecting (for now) data like:
     "person_id","age","gender","race","ethnicity","era_start_date","era_end_date","domain_id","concept_name","pt_concept_name","hlt_concept_name","hlgt_concept_name","soc_concept_name","concept_id","concept_code"
     0,83,"Male","White","Not Hispanic or Latino","2008-02-19","2008-02-19","Condition","Impacted cerumen","External ear disorders NEC","External ear disorders (excl congenital)","","",374375,"18070006" */
+   /*   moved following to server
     let data = rawData.map(d=>{
       let rec = _.clone(d);
       rec.start_date = new Date(rec.era_start_date);
@@ -14,6 +15,7 @@ export class PatientGroup extends Array {
       condNames(rec);
       return rec;
     });
+    */
     let pts = _.supergroup(data, 'person_id');
     let patients = pts.map(pt=>new Patient(pt.valueOf(), pt.records, opts));
     super();

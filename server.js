@@ -1,4 +1,6 @@
+"use strict";
 var NO_DB = true;
+var fs = require('fs');
 var pg = require('pg');
 var webpack = require('webpack');
 var webpackDevMiddleware = require('webpack-dev-middleware');
@@ -7,7 +9,8 @@ var config = require('./webpack.config');
 var compression = require('compression');
 var express = require('express');
 //var munge = require('./data/dqcdm_munge');
-var _ = require('lodash');
+require('babel-polyfill');
+var _ = require('supergroup-es6').default; // why need default?
 
 var app = new express();
 var port = process.env.PORT || 5000;
@@ -29,7 +32,41 @@ app.listen(port, function(error) {
 
 app.get("/data/person_data", function(req, res) {
   if (NO_DB) {
-    res.sendFile('./static/data/person_data_all.json',{ root: __dirname });
+    console.log(req.query);
+    readJSONFile( './static/data/person_data_all.json',
+        function (err, json) {
+          if(err) { throw err; }
+          console.log(json.length);
+          let data = json.map(rec=>{
+            rec.start_date = new Date(rec.era_start_date);
+            rec.end_date = new Date(rec.era_end_date);
+            condNames(rec);
+            return rec;
+          });
+          if (req.query.indexEvt) {
+            let byEvt = _.supergroup(data, ['name_0','person_id']);
+            let evt = byEvt.lookup(req.query.indexEvt);
+            console.log(`${evt.children.length} patients with ${evt}`);
+            let cohortIds = evt.children.rawValues();
+            let cohortRecs = data.filter(d=>_.contains(cohortIds,d.person_id));
+            let pts = _.supergroup(cohortRecs,'person_id');
+            pts.forEach(p=>{
+              p.index_date = new Date();
+              p.records.forEach(r=>{
+                p.index_date = Math.min(r.start_date, p.index_date);
+              });
+            })
+            pts.forEach(p=>{
+              p.records.forEach(r=>{
+                r.days_from_index = daysDiff(p.index_date, r.start_date)
+              });
+            });
+            res.json(pts.records);
+          } else {
+            res.json(data);
+          }
+        });
+    //res.sendFile('./static/data/person_data_all.json',{ root: __dirname });
     return;
   }
   var q = 'SELECT * ' +
@@ -92,4 +129,31 @@ function getData(sql, params) {
       });
     });
     return promise;
+}
+function condNames(rec) {
+  let names = _.chain([ 'soc_concept_name', 
+            'hglt_concept_name',
+            'hlt_concept_name',
+            'pt_concept_name',
+            'concept_name'
+          ]).map(d=>rec[d]).compact().value();
+  names.forEach((name, i) => rec['name_' + i] = name);
+}
+
+function readJSONFile(filename, callback) {
+  fs.readFile(filename, function (err, data) {
+    if(err) {
+      callback(err);
+      return;
+    }
+    try {
+      callback(null, JSON.parse(data));
+    } catch(exception) {
+      callback(exception);
+    }
+  });
+}
+function daysDiff(d0, d1) {
+    var diff = new Date(+d1).setHours(12) - new Date(+d0).setHours(12);
+      return Math.round(diff/8.64e7);
 }

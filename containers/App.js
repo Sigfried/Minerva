@@ -54,11 +54,8 @@ class App extends Component {
               <NavItem eventKey={1} href="/dqdata">DQ Data</NavItem>
               <NavItem eventKey={2} href="/seedims">See Dims</NavItem>
     */
-    let params = { api:'person_data',datasetLabel:'person_data' };
-    let data = datasets[Selector.apiId(params)] || [];
+    let data = datasets[Selector.apiurl('/data/person_data', router.location.query)] || [];
     let counts = data && data.length && `${data.length} records` || '';
-    params = { api:'patients',datasetLabel:'patients' };
-    data = datasets[Selector.apiId(params)] || [];
     counts += data && data.length && `, ${data.length} patients` || '';
     return (
       <div>

@@ -30,23 +30,15 @@ function errorMessage(state = null, action) {
 
   return state;
 }
-function datasets(state = {person_data:[]}, action) {
+function datasets(state = {}, action) {
+  const {key, data} = action.payload || {};
   switch (action.type) {
-    case DATA_RECEIVED:
-      if (!Array.isArray(action.payload))
-        return Object.assign({}, state, action.payload);
     case DATA_REQUESTED:
       let empty = [];
       empty.requestedOnly = true;
-      return Object.assign({}, state,
-              { [action.payload.apistring]: empty });
+      return Object.assign({}, state, { [key]: empty });
     case DATA_CACHED:
-      const {apistring, url, data} = action.payload;
-      if (state[apistring] && !state[apistring].requestedOnly &&
-          _.isEqual(state[apistring], data))
-        debugger;
-      return Object.assign({}, state,
-        { [action.payload.apistring]: action.payload.data });
+      return Object.assign({}, state, { [key]: data });
     default:
       return state;
   }
