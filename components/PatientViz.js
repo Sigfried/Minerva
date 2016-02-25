@@ -9,6 +9,7 @@ import _, {Supergroup} from 'supergroup-es6';
 import {Patient, Timeline} from './Patient';
 import {PatientGroup} from './PatientList';
 import Listicle from './Listicle';
+require('isomorphic-fetch');
 //var css = require('css!bootstrap/dist/css/bootstrap.css');
 require("!style!css!less!../style.less");
 require('!style!css!fixed-data-table/dist/fixed-data-table.min.css');
@@ -20,17 +21,24 @@ export default class PatientViz extends Component {
   constructor() {
     super();
     this.state = {
-      patients: new PatientGroup([], {
-        getHighlightedEvts: this.getHighlightedEvts.bind(this), }
-                                ),
       highlightEvts: [], // groups of evts from pt or pt time period
       highlightEvt: null,// single evt highlighted from EventListicle
     };
   }
   componentWillMount() {
-    console.log("ptviz mount");
-    this.requestData(true);
+    this.setState({patientsLoaded:'waiting'})
+    fetch('/data/person_ids')
+      .then(response => response.json())
+      .then(json => {
+        this.setState({person_ids: json})
+        let patients = new PatientGroup(json, {
+            getHighlightedEvts: this.getHighlightedEvts.bind(this), });
+        this.setState({person_ids: json, patients, patientsLoaded:true})
+      });
+    //console.log("ptviz mount");
+    //this.requestData(true);
   }
+  /*
   requestData(forceRequest) {
     const {apicall, router } = this.props;
     console.log("in ptviz requestData");
@@ -61,8 +69,8 @@ export default class PatientViz extends Component {
     }
   }
   componentDidUpdate() {
-    console.log("in ptviz didUpdate");
-    this.requestData(true);
+    //console.log("in ptviz didUpdate");
+    //this.requestData(true);
   }
   newData(data) {
     const {cacheData, } = this.props;
@@ -75,16 +83,34 @@ export default class PatientViz extends Component {
     this.setState({data, patients, patientsLoaded: true, events});
     return patients;
   }
+  */
   getHighlightedEvts() {
     return this.state.highlightEvts;
   }
   render() {
-    console.log("ptviz render");
     let {width, height, granularity, configChange, router} = this.props;
     width = (typeof width === "undefined") && 800 || width;
     height = (typeof height === "undefined") && 300 || height;
     const {patients, highlightedPatient, highlightedPatientIdx, 
+            patientsLoaded,
             events, highlightEvts, highlightEvt} = this.state;
+    //return <div>{person_ids && person_ids.join(',')}</div>
+    let info = `patients loaded: ${patientsLoaded}`;
+    return  <Grid> 
+              <Row>
+                <Col md={8}>
+                  {info}
+                  {patients && patients.table({
+                    patientFilter:null,
+                    granularity, timelineEvents,
+                    highlightedPatient, highlightedPatientIdx,
+                    highlightPatient:this.highlightPatient.bind(this),
+                  })}
+                  <h4>{highlightedPatient && highlightedPatient.desc() || ''}</h4>
+                </Col>
+              </Row>;
+            </Grid>;
+
     let timelineOpts = 
           {
             direction: 'down',
@@ -124,7 +150,7 @@ export default class PatientViz extends Component {
                       width={250} height={300} 
                       events={events} 
                     />;
-    let info = highlightEvt && <h5>{highlightEvt.children.length} patients 
+    let XXinfo = highlightEvt && <h5>{highlightEvt.children.length} patients 
               with {highlightEvt.records.length} (total) {highlightEvt.toString()}</h5> 
                 || '';
     return  <Grid> 

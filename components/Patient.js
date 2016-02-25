@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import d3KitTimeline from '../d3Kit-timeline/dist/d3Kit-timeline';
+require('isomorphic-fetch');
 
 function dateRound(offset, granularity) {
   if (granularity === 'day')
@@ -52,6 +53,7 @@ export class Patient {
     return this.periods(granularity);
   }
   periods(granularity) {
+    debugger;
     return this._periods[granularity] || 
           (this._periods[granularity] = _.supergroup(this.eras, 
               [d=>dateRound(d.days_from_index, granularity), 'name_0'], 
@@ -62,6 +64,9 @@ export class Patient {
     return this._allEvts;
   }
   dotTimeline(granularity, timelineEvents) {
+    if (!this._dataReady) {
+      return <div>Waiting for data for patient {this.id}</div>;
+    }
     let timelineOpts = 
           {
             dotsOnly: true,
@@ -92,6 +97,33 @@ export class Patient {
                     eras={this.eventsBy(granularity)}
                   />
   }
+  fetchData(callback) {
+    if (this.eras && this.eras.length || this.fetching) {
+      callback();
+      return;
+    }
+    this.fetching = true;
+    fetch(`/data/patient/${this.id}`)
+      .then(response => {
+        if (response.status >= 400) {
+          debugger;
+        }
+        return response.json()
+      })
+      .then(json => {
+        //console.log(json);
+        this.eras = json.map(d=>{
+          let rec = _.clone(d);
+          rec.start_date = new Date(rec.era_start_date);
+          rec.end_date = new Date(rec.era_end_date);
+          condNames(rec);
+          return rec;
+        });
+        this.dataLoaded = true;
+        callback();
+        //console.log(this.eras);
+      });
+  }
   get(field, args) {
     if (typeof field === "function")
       return field(this);
@@ -101,7 +133,7 @@ export class Patient {
       return this[field](...args);
     if (field in this) // pt.get('id')
       return this[field];
-    if (this.eras.length && field in this.eras[0]) // pt.get('race')
+    if (this.eras && this.eras.length && field in this.eras[0]) // pt.get('race')
       return this.eras[0][field];
   }
   desc() {
@@ -111,6 +143,34 @@ export class Patient {
        Gender: ${this.get('gender')},
        Race: ${this.get('race')},
        Ethnicity: ${this.get('ethnicity')}`;
+  }
+}
+export class PatientDisplay extends Component {
+  constructor() {
+    super();
+  }
+  componentDidMount() {
+    const {patient} = this.props;
+    console.log(`fetching data, patient: ${patient.id}`);
+    if (!patient.dataLoaded) {
+      patient.fetchData(()=>{
+        console.log(`data ready for pt ${patient.id}`);
+      })
+    }
+  }
+  componentWillReceiveProps(props) {
+    const {patient} = props;
+    console.log(`componentUpdate fetching data, patient: ${patient.id}`);
+    if (!patient.dataLoaded) {
+      patient.fetchData(()=>{
+        console.log(`componentUpdate data ready for pt ${patient.id}`);
+      })
+    }
+  }
+  render() {
+    const {patient, field, args} = this.props;
+    //if (patient.id > 12) debugger;
+    return <div>{patient && patient.get(field, args) || 'no data'}</div>;
   }
 }
 export class Timeline extends Component {
@@ -149,4 +209,13 @@ export class Timeline extends Component {
     chart.data([]);
     this.setState({chart});
   }
+}
+function condNames(rec) {
+  let names = _.chain([ 'soc_concept_name', 
+            'hglt_concept_name',
+            'hlt_concept_name',
+            'pt_concept_name',
+            'concept_name'
+          ]).map(d=>rec[d]).compact().value();
+  names.forEach((name, i) => rec['name_' + i] = name);
 }

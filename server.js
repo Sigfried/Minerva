@@ -12,6 +12,11 @@ var express = require('express');
 require('babel-polyfill');
 var _ = require('supergroup-es6').default; // why need default?
 
+let json = fs.readFileSync('./static/data/person_data_all.json');
+let data = JSON.parse(json);
+let patients = _.supergroup(data, 'person_id');
+
+
 var app = new express();
 var port = process.env.PORT || 5000;
 app.use(compression())
@@ -30,6 +35,14 @@ app.listen(port, function(error) {
   }
 });
 
+app.get("/data/person_ids", function(req, res) {
+  res.json(patients.rawValues());
+});
+app.get("/data/patient/:id", function(req, res) {
+  let pt = patients.lookup(req.params.id);
+  console.log(`pt ${req.params.id} found: ${!!pt}`);
+  res.json(patients.lookup(req.params.id).records);
+});
 app.get("/data/person_data", function(req, res) {
   if (NO_DB) {
     console.log(req.query);

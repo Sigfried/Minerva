@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { Table, Column, Cell } from 'fixed-data-table';
-import {Patient, Timeline} from './Patient';
+import {Patient, PatientDisplay, Timeline} from './Patient';
 
 export class PatientGroup extends Array {
   constructor(data, opts={}) {
@@ -16,9 +16,8 @@ export class PatientGroup extends Array {
       return rec;
     });
     */
-    let pts = _.supergroup(data, 'person_id');
-    let patients = pts.map(pt=>new Patient(pt.valueOf(), pt.records, opts));
     super();
+    let patients = data.map(pid=>new Patient(pid, null, opts));
     this.push(...patients);
     this.data = data;
   }
@@ -86,24 +85,27 @@ export class PatientGroup extends Array {
     */
 // TABLE STUFF
 
-class TableCell extends React.Component {
+class TableCell extends Component {
   render() {
-    const {rowIndex, field, args, data, ...props} = this.props;
+    const {patients, rowIndex, field, args, data, ...props} = this.props;
     return (
       <Cell {...props}>
-        { data.length && data[rowIndex].get(field, args) || '' }
+        <PatientDisplay patient={patients[rowIndex]}
+            field={field} args={args} />
       </Cell>
+      || <div>waiting</div>
     );
   }
 }
-export class PtTable extends React.Component {
+export class PtTable extends Component {
   ptHover(evt, idx) {
     let pt = this.props.patients[idx];
-    let ptId = pt.id;
+    let ptId = pt.valueOf();
     this.props.highlightPatient(pt, idx);
   }
   render() {
     const {patients, granularity, timelineEvents, rowHighlight} = this.props;
+    if (!patients) debugger;
     return (
       <Table
         onRowMouseEnter={this.ptHover.bind(this)}
@@ -114,28 +116,27 @@ export class PtTable extends React.Component {
         width={800}
         height={250}>
         <Column header={<Cell>PersonId</Cell>}
-          cell={ <TableCell data={patients} field="id" args={[]}/> } width={80} />
+          cell={props => this.getTableCell.bind(this)(props, "id", [])} width={80} />
         <Column header={<Cell>Age</Cell>} 
-          cell={ <TableCell data={patients} field='age' args={[]} /> } width={60} />
+          cell={props => this.getTableCell.bind(this)(props, "age", [])} width={60} />
         <Column header={<Cell>Gender</Cell>} 
-          cell={ <TableCell data={patients} field='gender' args={[]} /> } width={70} />
+          cell={props => this.getTableCell.bind(this)(props, "gender", [])} width={70} />
         <Column header={<Cell>Race</Cell>} 
-          cell={ <TableCell data={patients} field='race' args={[]} /> } width={70} />
+          cell={props => this.getTableCell.bind(this)(props, "race", [])} width={70} />
         <Column header={<Cell>Ethnicity</Cell>} 
-          cell={ <TableCell data={patients} field='ethnicity' args={[]} /> } width={100} />
+          cell={props => this.getTableCell.bind(this)(props, "ethnicity", [])} width={100} />
         <Column header={<Cell>Timeline</Cell>} 
-          cell={ <TableCell data={patients} field='dotTimeline' 
-            args={[granularity, timelineEvents]} /> } width={350} />
+          cell={props => this.getTableCell.bind(this)(props, "dotTimeline", [granularity, timelineEvents])} width={350} />
       </Table>
     );
   }
-}
-function condNames(rec) {
-  let names = _.chain([ 'soc_concept_name', 
-            'hglt_concept_name',
-            'hlt_concept_name',
-            'pt_concept_name',
-            'concept_name'
-          ]).map(d=>rec[d]).compact().value();
-  names.forEach((name, i) => rec['name_' + i] = name);
+  getTableCell(props, field, args) {
+    const {patients} = this.props;
+    if (!patients) debugger;
+    return (
+      <Cell {...props}>
+        <PatientDisplay patient={patients[props.rowIndex]}
+            field={field} args={args} />
+      </Cell>);
+  }
 }
