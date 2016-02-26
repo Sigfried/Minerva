@@ -27,12 +27,21 @@ export default class PatientViz extends Component {
     };
   }
   componentWillMount() {
-    fetch('/data/person_ids')
+    this.requestData();
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.search !== this.props.router.location.search) {
+      this.requestData();
+    }
+  }
+  requestData() {
+    let search = this.props.router.location.search;
+    fetch(`/data/person_ids?${search}`)
       .then(response => response.json())
       .then(json => {
         let patients = new PatientGroup(json, {
             getHighlightedEvts: this.getHighlightedEvts.bind(this), });
-        this.setState({person_ids: json, patients, })
+        this.setState({person_ids: json, patients, search})
       });
     fetch('/data/events')
       .then(response => response.json())
@@ -41,55 +50,7 @@ export default class PatientViz extends Component {
             getHighlightedEvts: this.getHighlightedEvts.bind(this), });
         this.setState({events: json})
       });
-    //console.log("ptviz mount");
-    //this.requestData(true);
   }
-  /*
-  requestData(forceRequest) {
-    const {apicall, router } = this.props;
-    console.log("in ptviz requestData");
-    let status = apicall('/data/person_data', router.location.query);
-    //console.log(`fetching: ${apistring}; status: ${status}`);
-    if (status !== "ready" && !this.state.newDataComing) {
-      console.log(`it's new data not ready`);
-      this.setState({newDataComing: true});
-    } else if (this.state.newDataComing && status === "ready") {
-      console.log(`new data ready`);
-      this.setState({newDataComing: false});
-      let data = this.props.datasets[Selector.apiurl('/data/person_data', router.location.query)] || [];
-      data.length && this.newData(data);
-    }
-    return status;
-
-    if (forceRequest || this.state.currentQuery !== router.location.search) {
-      console.log("and requesting data");
-      console.log(`because ${forceRequest && 'being forced '}
-                           query was: ${this.state.currentQuery},
-                           query is: ${router.location.search}`);
-      this.setState({currentQuery: router.location.search});
-      //let apiparams = { api:'person_data', where:router.location.query };
-      //let apistring = Selector.apiId(apiparams);
-      //console.log(`fetching? ${apistring}`);
-      let status = apicall('/data/person_data', router.location.query);
-      return status;
-    }
-  }
-  componentDidUpdate() {
-    //console.log("in ptviz didUpdate");
-    //this.requestData(true);
-  }
-  newData(data) {
-    const {cacheData, } = this.props;
-    if (this.state.patientsLoaded) return; // only loading once for now
-    let patients = new PatientGroup(data, {
-        getHighlightedEvts: this.getHighlightedEvts.bind(this), });
-    cacheData({key:'patients', data:patients});
-      //{apistring:Selector.apiId({api:'patients'}), data:patients});
-    let events = _.supergroup(patients.data, ['name_0','person_id']);
-    this.setState({data, patients, patientsLoaded: true, events});
-    return patients;
-  }
-  */
   getHighlightedEvts() {
     return this.state.highlightEvts;
   }
@@ -99,14 +60,19 @@ export default class PatientViz extends Component {
     height = (typeof height === "undefined") && 300 || height;
     const {patients, highlightedPatient, highlightedPatientIdx, 
             events, highlightEvts, highlightEvt} = this.state;
-    //return <div>{person_ids && person_ids.join(',')}</div>
+    let indexEvt = router.location.query.indexEvt;
+
     let timelineEvents = {
       labelMouseover: this.labelHover.bind(this),
       dotMouseover: this.labelHover.bind(this),
     }
+    let info = <h4>{patients && patients.length || 0} patients in cohort
+                    {indexEvt && ` with ${indexEvt}`}
+               </h4>;
     return  <Grid> 
               <Row>
                 <Col md={8}>
+                  {info}
                   {patients && patients.table({
                     patientFilter:null,
                     granularity, timelineEvents,

@@ -43,7 +43,13 @@ app.listen(port, function(error) {
 });
 
 app.get("/data/person_ids", function(req, res) {
-  res.json(patients.rawValues());
+  if (req.query.indexEvt) {
+    console.log(`how many persons with ${req.query.indexEvt}`);
+    res.json(events.lookup(req.query.indexEvt).children.rawValues());
+  } else {
+    console.log('no indexEvt requested');
+    res.json(patients.rawValues());
+  }
 });
 app.get("/data/patient/:id", function(req, res) {
   let pt = patients.lookup(req.params.id);
