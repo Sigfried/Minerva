@@ -13,9 +13,16 @@ require('babel-polyfill');
 var _ = require('supergroup-es6').default; // why need default?
 
 let json = fs.readFileSync('./static/data/person_data_all.json');
-let data = JSON.parse(json);
+let data = JSON.parse(json).map(rec=>{
+  rec.start_date = new Date(rec.era_start_date);
+  rec.end_date = new Date(rec.era_end_date);
+  condNames(rec);
+  return rec;
+});
+
 let patients = _.supergroup(data, 'person_id');
 
+let events = _.supergroup(data, ['name_0','person_id']);
 
 var app = new express();
 var port = process.env.PORT || 5000;
@@ -40,8 +47,19 @@ app.get("/data/person_ids", function(req, res) {
 });
 app.get("/data/patient/:id", function(req, res) {
   let pt = patients.lookup(req.params.id);
-  console.log(`pt ${req.params.id} found: ${!!pt}`);
+  //console.log(`pt ${req.params.id} found: ${!!pt}`);
   res.json(patients.lookup(req.params.id).records);
+});
+app.get("/data/events", function(req, res) {
+  let evtRecs = events.map(function(e) {
+    return {
+      name:e.toString(), 
+      patients: e.children.length,
+      occurrences: e.records.length,
+    };
+  });
+  console.log(evtRecs.length + ' evtRecs');
+  res.json(evtRecs);
 });
 app.get("/data/person_data", function(req, res) {
   if (NO_DB) {

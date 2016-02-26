@@ -160,8 +160,8 @@ export class PatientDisplay extends Component {
   }
   componentWillReceiveProps(props) {
     const {patient} = props;
-    console.log(`componentUpdate fetching data, patient: ${patient.id}`);
     if (!patient.dataLoaded) {
+      console.log(`componentUpdate fetching data, patient: ${patient.id}`);
       patient.fetchData(()=>{
         console.log(`componentUpdate data ready for pt ${patient.id}`);
       })

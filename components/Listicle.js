@@ -27,7 +27,10 @@ export default class Listicle extends Component {
   render() {
     const {passthrough, width, height, 
         isHighlighted, hover, endHover, 
-        valFunc=d=>d, sortBy, controls, itemClass} = this.props;
+        valFunc=d=>d, 
+        labelFunc=d=>d.toString(), 
+        sortBy, controls, 
+        itemClass=()=>''} = this.props;
     const things = this.props.things.sort((a,b)=>(sortBy||valFunc)(b)-(sortBy||valFunc)(a));
 
     // not sure what's going wrong with sorting... going without for now
@@ -42,6 +45,7 @@ export default class Listicle extends Component {
                 passthrough={passthrough}
                 thing={thing}
                 valFunc={valFunc}
+                labelFunc={labelFunc}
                 controls={controls}
                 itemClass={itemClass}
                 isHighlighted={isHighlighted}
@@ -66,7 +70,7 @@ Listicle.propTypes = {
 
 class Item extends Component {
     render() {
-      let {passthrough, thing, valFunc, orientation, 
+      let {passthrough, thing, valFunc, labelFunc, orientation, 
         i, xScale, chartHeight, chartWidth, hover, 
         isHighlighted, endHover, controls, itemClass} = this.props;
       hover = hover || _.noop;
@@ -80,17 +84,23 @@ class Item extends Component {
       let className = itemClass ? itemClass(thing) : '';
       return (
         <div className={'background item ' + className}
-              style={{cursor:'pointer'}}
+              style={{position:'relative', height:'1.4em', cursor:'pointer'}}
               onMouseOver={evt=>hover(thing,passthrough,i, evt)}
               onMouseOut={evt=>endHover(thing,passthrough,i, evt)}
           >
-            {controlSpans}
-            <span className={'normal item ' + className}
-                  style={{width:barWidth, cursor:'pointer'}}
+            <span
+                  style={{position:'absolute', }}
+            >
+              {controlSpans}
+              {labelFunc(thing)}
+            </span>
+            <span 
+                  className={'normal item ' + className}
+                  style={{position:'absolute', width:barWidth,  height:'1.4em',
+                          cursor:'pointer'}}
                   onMouseOver={evt=>hover(thing,passthrough,i, evt)}
                   onMouseOut={evt=>endHover(thing,passthrough,i, evt)}
             >
-                {thing.toString()}
             </span>
           </div>
       );

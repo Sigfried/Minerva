@@ -3,7 +3,8 @@ import ReactDOM from 'react-dom';
 //import DataTable from './DataTable';
 import ApiWrapper from './Wrapper';
 import Histogram from './Histogram';
-import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar, Input } from 'react-bootstrap';
+import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar, 
+         Input, Tabs, Tab } from 'react-bootstrap';
 import * as Selector from '../selectors';
 import _, {Supergroup} from 'supergroup-es6';
 import {Patient, Timeline} from './Patient';
@@ -26,14 +27,19 @@ export default class PatientViz extends Component {
     };
   }
   componentWillMount() {
-    this.setState({patientsLoaded:'waiting'})
     fetch('/data/person_ids')
       .then(response => response.json())
       .then(json => {
-        this.setState({person_ids: json})
         let patients = new PatientGroup(json, {
             getHighlightedEvts: this.getHighlightedEvts.bind(this), });
-        this.setState({person_ids: json, patients, patientsLoaded:true})
+        this.setState({person_ids: json, patients, })
+      });
+    fetch('/data/events')
+      .then(response => response.json())
+      .then(json => {
+        let patients = new PatientGroup(json, {
+            getHighlightedEvts: this.getHighlightedEvts.bind(this), });
+        this.setState({events: json})
       });
     //console.log("ptviz mount");
     //this.requestData(true);
@@ -92,14 +98,15 @@ export default class PatientViz extends Component {
     width = (typeof width === "undefined") && 800 || width;
     height = (typeof height === "undefined") && 300 || height;
     const {patients, highlightedPatient, highlightedPatientIdx, 
-            patientsLoaded,
             events, highlightEvts, highlightEvt} = this.state;
     //return <div>{person_ids && person_ids.join(',')}</div>
-    let info = `patients loaded: ${patientsLoaded}`;
+    let timelineEvents = {
+      labelMouseover: this.labelHover.bind(this),
+      dotMouseover: this.labelHover.bind(this),
+    }
     return  <Grid> 
               <Row>
                 <Col md={8}>
-                  {info}
                   {patients && patients.table({
                     patientFilter:null,
                     granularity, timelineEvents,
@@ -108,9 +115,30 @@ export default class PatientViz extends Component {
                   })}
                   <h4>{highlightedPatient && highlightedPatient.desc() || ''}</h4>
                 </Col>
-              </Row>;
+              </Row>
+              <hr/>
+              <Row>
+                <Col md={12}>
+                  <Tabs defaultActiveKey={1}>
+                    <Tab eventKey={1} title="Index Evt">
+                      <EventListicle 
+                        router={router}
+                        configChange={configChange}
+                        evtHover={this.evtHover.bind(this)}
+                        highlightEvts={highlightEvts}
+                        highlightEvt={highlightEvt && highlightEvt.toString()}
+                        width={650} height={600} 
+                        events={events} 
+                      />
+                    </Tab>
+                    <Tab eventKey={2} title="Evts of Interest">Tab 2 content</Tab>
+                    <Tab eventKey={3} title="Settings" >Tab 3 content</Tab>
+                  </Tabs>
+                </Col>
+              </Row>
             </Grid>;
 
+            /*
     let timelineOpts = 
           {
             direction: 'down',
@@ -153,7 +181,7 @@ export default class PatientViz extends Component {
     let XXinfo = highlightEvt && <h5>{highlightEvt.children.length} patients 
               with {highlightEvt.records.length} (total) {highlightEvt.toString()}</h5> 
                 || '';
-    return  <Grid> 
+    return  (<Grid> 
               <Row>
                 <Col md={8}>
                   {info}
@@ -178,8 +206,9 @@ export default class PatientViz extends Component {
                   {listicle}
                   {evtList}
                 </Col>
-              </Row>;
-            </Grid>;
+              </Row>
+            </Grid>);
+            */
   }
   labelHover(node) {
     let highlightEvts = node.children.map(String); // labels/dots have event children
@@ -250,14 +279,26 @@ class EventListicle extends Component {
       //<ListicleControl key={1} name="indexEvt"/>,
       //<ListicleControl key={2} name="remove"/>,
     ];
-    return <div style={{width, height, overflow:'auto', padding: '8px'}}>
-            {buttons}
-            <Listicle  
+    return <Grid>
+            <Row>
+              <Col md={2}>
+                <h4 style={{textAlign:'right'}}>Index by first:</h4>
+                <br/>
+                <br/>
+                <br/>
+                <br/>
+                <h5>Sort by</h5>
+                {buttons}
+              </Col>
+              <Col md={9}>
+                <br/>
+                <Listicle  
                         //things={events.filter(d=>_.contains(highlightEvts, d.toString()))}
                         things={events}
                         itemClass={this.eventClass.bind(this)}
                         //eventHighlighted={eventHighlighted}
                         valFunc={this.state.eventFreqFunc.func}
+                        labelFunc={d=>d.name}
                         evtHover={evtHover}
                         controls={controls}
                         width={width}
@@ -265,9 +306,11 @@ class EventListicle extends Component {
                         hover={this.highlight.bind(this)}
                         endHover={this.endHighlight.bind(this)}
                         isHighlighted={this.isHighlighted.bind(this)}
-              >
-              </Listicle>
-           </div>
+                >
+                </Listicle>
+              </Col>
+            </Row>
+           </Grid>
   }
 }
 class ListicleControl {
@@ -293,11 +336,11 @@ function eventFreqFuncs(pick) {
   const all = [
     { label: 'Patients',
       key:   'patients',
-      func:   d => d.children.length,
+      func:   d => d.patients,
     },
     { label: 'Occurrences',
       key:   'occurrences',
-      func:   d => d.records.length,
+      func:   d => d.occurrences,
     },
   ];
   if (pick)
