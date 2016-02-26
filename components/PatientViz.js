@@ -271,14 +271,6 @@ class EventListicle extends Component {
           defaultChecked={f.label === this.state.eventFreqFunc.label}
           value={f.func} key={f.label} onClick={()=>this.changeValFunc.bind(this)(f)}
         />);
-    let controls = [ 
-          new ListicleControl('check', configChange, router),
-          new ListicleControl('remove', configChange, router),
-          new ListicleControl('indexEvt', configChange, router),
-      //<ListicleControl key={0} name="filter"/>,
-      //<ListicleControl key={1} name="indexEvt"/>,
-      //<ListicleControl key={2} name="remove"/>,
-    ];
     return <Grid>
             <Row>
               <Col md={2}>
@@ -300,12 +292,13 @@ class EventListicle extends Component {
                         valFunc={this.state.eventFreqFunc.func}
                         labelFunc={d=>d.name}
                         evtHover={evtHover}
-                        controls={controls}
                         width={width}
                         height={height - 70}
                         hover={this.highlight.bind(this)}
                         endHover={this.endHighlight.bind(this)}
                         isHighlighted={this.isHighlighted.bind(this)}
+                        click={ evt=>configChange(router, 
+                                    'indexEvt', evt.name) }
                 >
                 </Listicle>
               </Col>

@@ -151,19 +151,19 @@ export class PatientDisplay extends Component {
   }
   componentDidMount() {
     const {patient} = this.props;
-    console.log(`fetching data, patient: ${patient.id}`);
+    //console.log(`fetching data, patient: ${patient.id}`);
     if (!patient.dataLoaded) {
       patient.fetchData(()=>{
-        console.log(`data ready for pt ${patient.id}`);
+        //console.log(`data ready for pt ${patient.id}`);
       })
     }
   }
   componentWillReceiveProps(props) {
     const {patient} = props;
     if (!patient.dataLoaded) {
-      console.log(`componentUpdate fetching data, patient: ${patient.id}`);
+      //console.log(`componentUpdate fetching data, patient: ${patient.id}`);
       patient.fetchData(()=>{
-        console.log(`componentUpdate data ready for pt ${patient.id}`);
+        //console.log(`componentUpdate data ready for pt ${patient.id}`);
       })
     }
   }

@@ -26,10 +26,10 @@ export default class Listicle extends Component {
   */
   render() {
     const {passthrough, width, height, 
-        isHighlighted, hover, endHover, 
+        isHighlighted, hover, endHover, click,
         valFunc=d=>d, 
         labelFunc=d=>d.toString(), 
-        sortBy, controls, 
+        sortBy, controls=[], 
         itemClass=()=>''} = this.props;
     const things = this.props.things.sort((a,b)=>(sortBy||valFunc)(b)-(sortBy||valFunc)(a));
 
@@ -49,6 +49,7 @@ export default class Listicle extends Component {
                 controls={controls}
                 itemClass={itemClass}
                 isHighlighted={isHighlighted}
+                click={click}
                 hover={hover}
                 endHover={endHover}
                 chartWidth={width}
@@ -71,7 +72,7 @@ Listicle.propTypes = {
 class Item extends Component {
     render() {
       let {passthrough, thing, valFunc, labelFunc, orientation, 
-        i, xScale, chartHeight, chartWidth, hover, 
+        i, xScale, chartHeight, chartWidth, hover, click,
         isHighlighted, endHover, controls, itemClass} = this.props;
       hover = hover || _.noop;
       isHighlighted = isHighlighted || _.noop;
@@ -87,6 +88,7 @@ class Item extends Component {
               style={{position:'relative', height:'1.4em', cursor:'pointer'}}
               onMouseOver={evt=>hover(thing,passthrough,i, evt)}
               onMouseOut={evt=>endHover(thing,passthrough,i, evt)}
+              onClick={evt=>click(thing,passthrough,i, evt)}
           >
             <span
                   style={{position:'absolute', }}
@@ -100,6 +102,7 @@ class Item extends Component {
                           cursor:'pointer'}}
                   onMouseOver={evt=>hover(thing,passthrough,i, evt)}
                   onMouseOut={evt=>endHover(thing,passthrough,i, evt)}
+                  onClick={evt=>click(thing,passthrough,i, evt)}
             >
             </span>
           </div>
