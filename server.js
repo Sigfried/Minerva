@@ -20,7 +20,7 @@ let data = JSON.parse(json).map(rec=>{
   return rec;
 });
 
-let patients = _.supergroup(data, 'person_id');
+let patients = _.supergroup(data, ['person_id','name_0']);
 
 let events = _.supergroup(data, ['name_0','person_id']);
 
@@ -53,8 +53,19 @@ app.get("/data/person_ids", function(req, res) {
 });
 app.get("/data/patient/:id", function(req, res) {
   let pt = patients.lookup(req.params.id);
+  if (req.query.indexEvt) {
+    let recs = pt.children.lookup(req.query.indexEvt).records;
+    let indexRec = _.sortBy(recs, d=>d.start_date)[0];
+    let indexDate = indexRec.start_date;
+    pt.records.forEach(r=>{
+      r.days_from_index = daysDiff(indexDate, r.start_date)
+      r.index_date = indexDate;
+    });
+    res.json(pt.records);
+  } else {
+    res.json(patients.lookup(req.params.id).records);
+  }
   //console.log(`pt ${req.params.id} found: ${!!pt}`);
-  res.json(patients.lookup(req.params.id).records);
 });
 app.get("/data/events", function(req, res) {
   let evtRecs = events.map(function(e) {

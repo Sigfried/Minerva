@@ -32,6 +32,7 @@ export class Patient {
     this.eras = eras;
     this.opts = opts;
     this._periods = {};
+    this.patientQueryString = this.opts.patientQueryString;
   }
   dateRange() {
     return this._date_range || 
@@ -53,18 +54,24 @@ export class Patient {
     return this.periods(granularity);
   }
   periods(granularity) {
-    debugger;
     return this._periods[granularity] || 
           (this._periods[granularity] = _.supergroup(this.eras, 
               [d=>dateRound(d.days_from_index, granularity), 'name_0'], 
                 {dimNames: [granularity, 'name_0']}));
   }
   allEvts() {
-    this._allEvts = this._allEvts || _.supergroup(this.eras, 'name_0');
-    return this._allEvts;
+    try {
+      this._allEvts = this._allEvts || 
+                      this.eras && _.supergroup(this.eras, 'name_0') ||
+                        [];
+      return this._allEvts;
+    } catch(e) {
+      console.warn(e);
+      debugger;
+    }
   }
-  dotTimeline(granularity, timelineEvents) {
-    if (!this._dataReady) {
+  dotTimeline(granularity, timelineMouseEvents) {
+    if (!this.dataLoaded) {
       return <div>Waiting for data for patient {this.id}</div>;
     }
     let timelineOpts = 
@@ -93,8 +100,8 @@ export class Patient {
           };
     return <Timeline height={150} width={300}
                 opts={timelineOpts}
-                timelineEvents={timelineEvents}
-                    eras={this.eventsBy(granularity)}
+                timelineMouseEvents={timelineMouseEvents}
+                    dots={this.eventsBy(granularity)}
                   />
   }
   fetchData(callback) {
@@ -103,7 +110,7 @@ export class Patient {
       return;
     }
     this.fetching = true;
-    fetch(`/data/patient/${this.id}`)
+    fetch(`/data/patient/${this.id}?${this.patientQueryString}`)
       .then(response => {
         if (response.status >= 400) {
           debugger;
@@ -180,31 +187,30 @@ export class Timeline extends Component {
     };
   }
   render() {
-    const {eras, width, height} = this.props;
+    const {dots, width, height} = this.props;
     return (<div
-            style={{display: (eras && eras.length && 'block' || 'none'),
+            style={{display: (dots && dots.length && 'block' || 'none'),
                     //height:height+'px', 
                     width:width+'px',
                     fontSize: 10, //overflow: 'auto',
-                  }}>
-            </div>);
+                  }} />);
   }
   componentDidUpdate(nextProps, nextState) {
-    const {eras} = this.props;
+    const {dots} = this.props;
     let chart = this.state.chart;
     let el = ReactDOM.findDOMNode(this);
     //let data = this.state.starwars.slice(3);
-    chart && chart.data(eras || []);
+    chart && chart.data(dots || []);
     //let layers = d3.max(d3.select(el).selectAll('.label-g').data().map(d=>d.layerIndex))||-1 + 1;
     //console.log(`layers: ${layers}`);
 
   }
   componentDidMount() {
-    const {eras, width, height, opts, timelineEvents} = this.props;
+    const {dots, width, height, opts, timelineMouseEvents} = this.props;
     let el = ReactDOM.findDOMNode(this);
     var chart = new d3KitTimeline.Timeline(el, opts);
-    for (let e in timelineEvents) {
-      chart.on(e, timelineEvents[e]);
+    for (let e in timelineMouseEvents) {
+      chart.on(e, timelineMouseEvents[e]);
     }
     chart.data([]);
     this.setState({chart});

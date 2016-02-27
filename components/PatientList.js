@@ -40,7 +40,7 @@ export class PatientGroup extends Array {
                     highlightPatient={opts.highlightPatient}
                     rowHighlight={(idx)=>this.rowHighlight.bind(this)(idx,opts.highlightedPatientIdx)}
                     granularity={opts.granularity}
-                    timelineEvents={opts.timelineEvents}
+                    timelineMouseEvents={opts.timelineMouseEvents}
            />
   }
 }
@@ -104,7 +104,7 @@ export class PtTable extends Component {
     this.props.highlightPatient(pt, idx);
   }
   render() {
-    const {patients, granularity, timelineEvents, rowHighlight} = this.props;
+    const {patients, granularity, timelineMouseEvents, rowHighlight} = this.props;
     if (!patients) debugger;
     return (
       <Table
@@ -126,7 +126,7 @@ export class PtTable extends Component {
         <Column header={<Cell>Ethnicity</Cell>} 
           cell={props => this.getTableCell.bind(this)(props, "ethnicity", [])} width={100} />
         <Column header={<Cell>Timeline</Cell>} 
-          cell={props => this.getTableCell.bind(this)(props, "dotTimeline", [granularity, timelineEvents])} width={350} />
+          cell={props => this.getTableCell.bind(this)(props, "dotTimeline", [granularity, timelineMouseEvents])} width={350} />
       </Table>
     );
   }

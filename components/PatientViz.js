@@ -40,14 +40,17 @@ export default class PatientViz extends Component {
       .then(response => response.json())
       .then(json => {
         let patients = new PatientGroup(json, {
-            getHighlightedEvts: this.getHighlightedEvts.bind(this), });
+            getHighlightedEvts: this.getHighlightedEvts.bind(this), 
+            patientQueryString: this.props.router.location.search,
+        });
         this.setState({person_ids: json, patients, search})
       });
     fetch('/data/events')
       .then(response => response.json())
       .then(json => {
         let patients = new PatientGroup(json, {
-            getHighlightedEvts: this.getHighlightedEvts.bind(this), });
+            getHighlightedEvts: this.getHighlightedEvts.bind(this), 
+        });
         this.setState({events: json})
       });
   }
@@ -62,7 +65,7 @@ export default class PatientViz extends Component {
             events, highlightEvts, highlightEvt} = this.state;
     let indexEvt = router.location.query.indexEvt;
 
-    let timelineEvents = {
+    let timelineMouseEvents = {
       labelMouseover: this.labelHover.bind(this),
       dotMouseover: this.labelHover.bind(this),
     }
@@ -75,7 +78,7 @@ export default class PatientViz extends Component {
                   {info}
                   {patients && patients.table({
                     patientFilter:null,
-                    granularity, timelineEvents,
+                    granularity, timelineMouseEvents,
                     highlightedPatient, highlightedPatientIdx,
                     highlightPatient:this.highlightPatient.bind(this),
                   })}
@@ -130,7 +133,7 @@ export default class PatientViz extends Component {
           };
             //textFn: d => `${d.concept_name}<br/>
               //${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
-    let timelineEvents = {
+    let timelineMouseEvents = {
       labelMouseover: this.labelHover.bind(this),
       dotMouseover: this.labelHover.bind(this),
     }
@@ -153,7 +156,7 @@ export default class PatientViz extends Component {
                   {info}
                   {patients.table({
                     patientFilter:null,
-                    granularity, timelineEvents,
+                    granularity, timelineMouseEvents,
                     highlightedPatient, highlightedPatientIdx,
                     highlightPatient:this.highlightPatient.bind(this),
                   })}
@@ -162,7 +165,7 @@ export default class PatientViz extends Component {
                   <h4>{highlightedPatient && highlightedPatient.desc() || ''}</h4>
                   <Timeline height={height} width={width}
                     opts={timelineOpts}
-                    timelineEvents={timelineEvents}
+                    timelineMouseEvents={timelineMouseEvents}
                     //eras={highlightedPatient && highlightedPatient.lookup("Condition").records}
                     eras={highlightedPatient && highlightedPatient.eventsBy(granularity)}
                   >
