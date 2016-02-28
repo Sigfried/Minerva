@@ -72,15 +72,17 @@ export class Patient {
   }
   dotTimeline(granularity, timelineMouseEvents) {
     if (!this.dataLoaded) {
+      return <div/>;
       return <div>Waiting for data for patient {this.id}</div>;
     }
     let timelineOpts = 
           {
             dotsOnly: true,
             direction: 'down',
-            initialWidth: 300,
+            initialWidth: 500,
             initialHeight: 150,
             layerGap: 30,
+            margin: {left: 20, top: 10, right: 20, bottom: 10},
             labella: {
               //minPos: 100, 
               maxPos: 300 * .85, //stubWidth: 100,
@@ -98,7 +100,7 @@ export class Patient {
             },
             linkColor: 'rgba(50, 80, 100, 0.5)',
           };
-    return <Timeline height={150} width={300}
+    return <Timeline width={300}
                 opts={timelineOpts}
                 timelineMouseEvents={timelineMouseEvents}
                     dots={this.eventsBy(granularity)}
@@ -144,12 +146,15 @@ export class Patient {
       return this.eras[0][field];
   }
   desc() {
-    return `
-       Pt Id: ${this.get('id')},
-       Age: ${this.get('age')},
-       Gender: ${this.get('gender')},
-       Race: ${this.get('race')},
-       Ethnicity: ${this.get('ethnicity')}`;
+    let ext = this.dateRange();
+    let dr = ext[1] - ext[0];
+    return <div>
+       Pt {this.get('id')}: {this.get('age')} {this.get('race')} {this.get('gender')}. {
+         this.eras.length} eras; {dr} days of history; <br/>
+         Events group into {this.periods('day').length} distinct days, {
+           this.periods('month').length} months, or {
+             this.periods('year').length} years
+       </div>;
   }
 }
 export class PatientDisplay extends Component {
@@ -177,7 +182,7 @@ export class PatientDisplay extends Component {
   render() {
     const {patient, field, args} = this.props;
     //if (patient.id > 12) debugger;
-    return <div>{patient && patient.get(field, args) || 'no data'}</div>;
+    return <div>{patient && patient.get(field, args) || ''}</div>;
   }
 }
 export class Timeline extends Component {

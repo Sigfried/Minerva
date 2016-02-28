@@ -59,7 +59,7 @@ export default class PatientViz extends Component {
   }
   render() {
     let {width, height, granularity, configChange, router} = this.props;
-    width = (typeof width === "undefined") && 800 || width;
+    width = (typeof width === "undefined") && 1000 || width;
     height = (typeof height === "undefined") && 300 || height;
     const {patients, highlightedPatient, highlightedPatientIdx, 
             events, highlightEvts, highlightEvt} = this.state;
@@ -72,42 +72,6 @@ export default class PatientViz extends Component {
     let info = <h4>{patients && patients.length || 0} patients in cohort
                     {indexEvt && ` with ${indexEvt}`}
                </h4>;
-    return  <Grid> 
-              <Row>
-                <Col md={8}>
-                  {info}
-                  {patients && patients.table({
-                    patientFilter:null,
-                    granularity, timelineMouseEvents,
-                    highlightedPatient, highlightedPatientIdx,
-                    highlightPatient:this.highlightPatient.bind(this),
-                  })}
-                  <h4>{highlightedPatient && highlightedPatient.desc() || ''}</h4>
-                </Col>
-              </Row>
-              <hr/>
-              <Row>
-                <Col md={12}>
-                  <Tabs defaultActiveKey={1}>
-                    <Tab eventKey={1} title="Index Evt">
-                      <EventListicle 
-                        router={router}
-                        configChange={configChange}
-                        evtHover={this.evtHover.bind(this)}
-                        highlightEvts={highlightEvts}
-                        highlightEvt={highlightEvt && highlightEvt.toString()}
-                        width={650} height={600} 
-                        events={events} 
-                      />
-                    </Tab>
-                    <Tab eventKey={2} title="Evts of Interest">Tab 2 content</Tab>
-                    <Tab eventKey={3} title="Settings" >Tab 3 content</Tab>
-                  </Tabs>
-                </Col>
-              </Row>
-            </Grid>;
-
-            /*
     let timelineOpts = 
           {
             direction: 'down',
@@ -133,6 +97,52 @@ export default class PatientViz extends Component {
           };
             //textFn: d => `${d.concept_name}<br/>
               //${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
+    return  <Grid> 
+              <Row>
+                <Col md={12}>
+                  {info}
+                  {patients && patients.table({
+                    patientFilter:null,
+                    granularity, timelineMouseEvents,
+                    highlightedPatient, highlightedPatientIdx,
+                    highlightPatient:this.highlightPatient.bind(this),
+                  })}
+                  <h5>{highlightedPatient && highlightedPatient.desc() || ''}</h5>
+                </Col>
+              </Row>
+              <hr/>
+              <Row>
+                  <Timeline height={height} width={width}
+                    opts={timelineOpts}
+                    timelineMouseEvents={timelineMouseEvents}
+                    //eras={highlightedPatient && highlightedPatient.lookup("Condition").records}
+                    dots={highlightedPatient && highlightedPatient.eventsBy(granularity)}
+                  >
+                  </Timeline>
+              </Row>
+              <hr/>
+              <Row>
+                <Col md={12}>
+                  <Tabs defaultActiveKey={1}>
+                    <Tab eventKey={1} title="Index Evt">
+                      <EventListicle 
+                        router={router}
+                        configChange={configChange}
+                        evtHover={this.evtHover.bind(this)}
+                        highlightEvts={highlightEvts}
+                        highlightEvt={highlightEvt && highlightEvt.toString()}
+                        width={650} height={600} 
+                        events={events} 
+                      />
+                    </Tab>
+                    <Tab eventKey={2} title="Evts of Interest">Tab 2 content</Tab>
+                    <Tab eventKey={3} title="Settings" >Tab 3 content</Tab>
+                  </Tabs>
+                </Col>
+              </Row>
+            </Grid>;
+
+            /*
     let timelineMouseEvents = {
       labelMouseover: this.labelHover.bind(this),
       dotMouseover: this.labelHover.bind(this),

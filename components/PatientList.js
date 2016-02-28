@@ -111,22 +111,22 @@ export class PtTable extends Component {
         onRowMouseEnter={this.ptHover.bind(this)}
         rowClassNameGetter={rowHighlight}
         rowsCount={patients.count()}
-        rowHeight={50}
+        rowHeight={35}
         headerHeight={50}
-        width={800}
+        width={1000}
         height={250}>
         <Column header={<Cell>PersonId</Cell>}
           cell={props => this.getTableCell.bind(this)(props, "id", [])} width={80} />
         <Column header={<Cell>Age</Cell>} 
-          cell={props => this.getTableCell.bind(this)(props, "age", [])} width={60} />
+          cell={props => this.getTableCell.bind(this)(props, "age", [])} width={50} />
         <Column header={<Cell>Gender</Cell>} 
           cell={props => this.getTableCell.bind(this)(props, "gender", [])} width={70} />
         <Column header={<Cell>Race</Cell>} 
           cell={props => this.getTableCell.bind(this)(props, "race", [])} width={70} />
         <Column header={<Cell>Ethnicity</Cell>} 
-          cell={props => this.getTableCell.bind(this)(props, "ethnicity", [])} width={100} />
+          cell={props => this.getTableCell.bind(this)(props, "ethnicity", [])} width={180} />
         <Column header={<Cell>Timeline</Cell>} 
-          cell={props => this.getTableCell.bind(this)(props, "dotTimeline", [granularity, timelineMouseEvents])} width={350} />
+          cell={props => this.getTableCell.bind(this)(props, "dotTimeline", [granularity, timelineMouseEvents])} width={550} />
       </Table>
     );
   }
