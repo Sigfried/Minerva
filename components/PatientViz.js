@@ -59,7 +59,7 @@ export default class PatientViz extends Component {
   }
   render() {
     let {width, height, granularity, configChange, router} = this.props;
-    width = (typeof width === "undefined") && 1000 || width;
+    width = (typeof width === "undefined") && 800 || width;
     height = (typeof height === "undefined") && 300 || height;
     const {patients, highlightedPatient, highlightedPatientIdx, 
             events, highlightEvts, highlightEvt} = this.state;
@@ -72,6 +72,12 @@ export default class PatientViz extends Component {
     let info = <h4>{patients && patients.length || 0} patients in cohort
                     {indexEvt && ` with ${indexEvt}`}
                </h4>;
+    let zeroCenterDomain = [-1, 1];
+    if (highlightedPatient) {
+      let dr = highlightedPatient.dateRange(granularity);
+      zeroCenterDomain = [ -(Math.max(Math.abs(dr[0]),Math.abs(dr[1]))),
+                                (Math.max(Math.abs(dr[0]),Math.abs(dr[1])))];
+    }
     let timelineOpts = 
           {
             direction: 'down',
@@ -83,12 +89,16 @@ export default class PatientViz extends Component {
               maxPos: width * .85, //stubWidth: 100,
               nodeHeight: 25,
             },
-            scale: d3.scale.linear(),
+            //dotsOnly: true,
+            scale: d3.scale.linear(),//.domain(zeroCenterDomain),
+            domain: zeroCenterDomain,
             timeFn: d => d.valueOf(),
             textFn: d => `${d.records.length} events`,
             dotRadius: d => Math.pow(d.records.length, 3/4),
             //dotColor: 'rgba(50, 80, 100, 0.5)',
             dotColor: dot => {
+              if (dot.valueOf() === 0)
+                return 'red';
               let highlighted = _.any(dot.children,
                     evt=> _.contains(this.getHighlightedEvts(), evt.toString())); // SLOW!
               return highlighted ?  'rgba(70, 120, 140, 0.7)' : 'rgba(50, 80, 100, 0.4)';

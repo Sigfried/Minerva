@@ -34,11 +34,16 @@ export class Patient {
     this._periods = {};
     this.patientQueryString = this.opts.patientQueryString;
   }
-  dateRange() {
+  dateRange(granularity) {
+    let denom = 1;
+    if (granularity === "month")
+      denom = 30;
+    if (granularity === "year")
+      denom = 365;
     return this._date_range || 
           (this._data_range = [
-            _.min(this.eras.map(d=>d.days_from_index)),
-            _.max(this.eras.map(d=>d.days_from_index)),
+            Math.round(_.min(this.eras.map(d=>d.days_from_index)) / denom),
+            Math.round(_.max(this.eras.map(d=>d.days_from_index)) / denom),
           ]);
   }
   eventDays() {
@@ -75,9 +80,11 @@ export class Patient {
       return <div/>;
       return <div>Waiting for data for patient {this.id}</div>;
     }
+    let dr = this.dateRange(granularity);
+    let zeroCenterDomain = [ -(Math.max(Math.abs(dr[0]),Math.abs(dr[1]))),
+                              (Math.max(Math.abs(dr[0]),Math.abs(dr[1])))];
     let timelineOpts = 
           {
-            dotsOnly: true,
             direction: 'down',
             initialWidth: 500,
             initialHeight: 150,
@@ -88,11 +95,16 @@ export class Patient {
               maxPos: 300 * .85, //stubWidth: 100,
               nodeHeight: 25,
             },
+            dotsOnly: true,
+            scale: d3.scale.linear(),
+            domain: zeroCenterDomain,
             timeFn: d => d.valueOf(),
             textFn: d => `${d.records.length} events`,
             dotRadius: d => Math.pow(d.records.length, 3/4),
             //dotColor: 'rgba(50, 80, 100, 0.5)',
             dotColor: dot => {
+              if (dot.valueOf() === 0)
+                return 'red';
               let highlighted = _.any(dot.children,
                     evt=> _.contains(this.opts.getHighlightedEvts(), evt.toString())); // SLOW!
               //return highlighted ?  'rgba(150, 80, 100, 0.9)' : 'rgba(50, 80, 100, 0.4)';
@@ -201,8 +213,10 @@ export class Timeline extends Component {
                   }} />);
   }
   componentDidUpdate(nextProps, nextState) {
-    const {dots} = this.props;
+    const {dots, opts} = this.props;
     let chart = this.state.chart;
+    console.log(opts.domain, dots && dots[0].records[0]);
+    chart.options(opts);
     let el = ReactDOM.findDOMNode(this);
     //let data = this.state.starwars.slice(3);
     chart && chart.data(dots || []);
