@@ -107,13 +107,16 @@ export default class PatientViz extends Component {
           };
             //textFn: d => `${d.concept_name}<br/>
               //${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
+    let evtColors = {
+      [indexEvt]: 'blue',
+    }
     return  <Grid> 
               <Row>
                 <Col md={12}>
                   {info}
                   {patients && patients.table({
                     patientFilter:null,
-                    granularity, timelineMouseEvents,
+                    granularity, timelineMouseEvents, evtColors,
                     highlightedPatient, highlightedPatientIdx,
                     highlightPatient:this.highlightPatient.bind(this),
                   })}

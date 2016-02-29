@@ -75,7 +75,7 @@ export class Patient {
       debugger;
     }
   }
-  dotTimeline(granularity, timelineMouseEvents) {
+  dotTimeline(granularity, timelineMouseEvents, evtColors) {
     if (!this.dataLoaded) {
       return <div/>;
       return <div>Waiting for data for patient {this.id}</div>;
@@ -103,12 +103,16 @@ export class Patient {
             dotRadius: d => Math.pow(d.records.length, 3/4),
             //dotColor: 'rgba(50, 80, 100, 0.5)',
             dotColor: dot => {
-              if (dot.valueOf() === 0)
-                return 'red';
-              let highlighted = _.any(dot.children,
-                    evt=> _.contains(this.opts.getHighlightedEvts(), evt.toString())); // SLOW!
-              //return highlighted ?  'rgba(150, 80, 100, 0.9)' : 'rgba(50, 80, 100, 0.4)';
-              return highlighted ?  'rgba(70, 130, 150, 0.8)' : 'rgba(50, 80, 100, 0.2)';
+              //if (dot.valueOf() === 0) return 'red';
+              //let highlighted = _.any(dot.children, evt=> _.contains(this.opts.getHighlightedEvts(), evt.toString())); // SLOW!
+              //return highlighted ?  'rgba(70, 130, 150, 0.8)' : 'rgba(50, 80, 100, 0.2)';
+              let dotColor = 'rgba(50, 80, 100, 0.3)';
+              _.any(evtColors, (color, specialEvt) => {
+                if (_.any(dot.children, evt => evt == specialEvt))
+                  dotColor = color;
+              });
+              //if (dot == 0) debugger;
+              return dotColor;
             },
             linkColor: 'rgba(50, 80, 100, 0.5)',
           };
@@ -172,13 +176,15 @@ export class Patient {
 export class PatientDisplay extends Component {
   constructor() {
     super();
+    this.state = {dataLoaded:false};
   }
   componentDidMount() {
     const {patient} = this.props;
     //console.log(`fetching data, patient: ${patient.id}`);
     if (!patient.dataLoaded) {
       patient.fetchData(()=>{
-        //console.log(`data ready for pt ${patient.id}`);
+        this.setState({dataLoaded:patient.dataLoaded});
+        //console.log(`data ready for pt ${patient.id}: ${patient.dataLoaded}`);
       })
     }
   }
@@ -187,14 +193,19 @@ export class PatientDisplay extends Component {
     if (!patient.dataLoaded) {
       //console.log(`componentUpdate fetching data, patient: ${patient.id}`);
       patient.fetchData(()=>{
-        //console.log(`componentUpdate data ready for pt ${patient.id}`);
+        this.setState({dataLoaded:patient.dataLoaded});
+        //console.log(`data ready for pt ${patient.id}: ${patient.dataLoaded}`);
       })
     }
   }
   render() {
     const {patient, field, args} = this.props;
-    //if (patient.id > 12) debugger;
     return <div>{patient && patient.get(field, args) || ''}</div>;
+    if (!this.state.dataLoaded) // this was supposed to help load cells without
+                                // user having to mouseover them. it's not working
+                                // leaving in place and moving on for now
+      return <div/>;
+    return <div>{patient.get(field, args)}</div>;
   }
 }
 export class Timeline extends Component {
@@ -215,7 +226,7 @@ export class Timeline extends Component {
   componentDidUpdate(nextProps, nextState) {
     const {dots, opts} = this.props;
     let chart = this.state.chart;
-    console.log(opts.domain, dots && dots[0].records[0]);
+    //console.log(opts.domain, dots && dots[0].records[0]);
     chart.options(opts);
     let el = ReactDOM.findDOMNode(this);
     //let data = this.state.starwars.slice(3);
