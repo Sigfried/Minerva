@@ -122,6 +122,7 @@ export default class PatientViz extends Component {
               </Row>
               <hr/>
               <Row>
+                <Col md={7}>
                   <Timeline height={height} width={width}
                     opts={timelineOpts}
                     timelineMouseEvents={timelineMouseEvents}
@@ -129,6 +130,12 @@ export default class PatientViz extends Component {
                     dots={highlightedPatient && highlightedPatient.eventsBy(granularity)}
                   >
                   </Timeline>
+                </Col>
+                <Col mdOffset={2} md={3}>
+                  <EventList
+                    patient={highlightedPatient}
+                  />
+                </Col>
               </Row>
               <hr/>
               <Row>
@@ -210,6 +217,18 @@ export default class PatientViz extends Component {
   highlightPatient(patient, idx) {
     let highlightEvts = patient.allEvts().rawValues();
     this.setState({highlightedPatient:patient, highlightedPatientIdx:idx, highlightEvts});
+  }
+}
+class EventList extends Component {
+  render() {
+    const {patient} = this.props;
+    if (!patient)
+      return <div/>;
+    let list = patient.eras.map((d,i)=>
+      <p key={i}>Day {d.days_from_index}: {d.name_0} 
+        { d.name_0 === d.concept_name ? '' : (' -> ' + d.concept_name)}
+      </p>);
+    return <div>{list}</div>;
   }
 }
 
