@@ -45,12 +45,41 @@ app.listen(port, function(error) {
 app.get("/data/person_ids", function(req, res) {
   if (req.query.indexEvt) {
     console.log(`how many persons with ${req.query.indexEvt}`);
-    res.json(events.lookup(req.query.indexEvt).children.rawValues());
+    let events = _.supergroup(data, ['name_0','person_id']);
+    let indexEvt = events.lookup(req.query.indexEvt);
+    if (req.query.otherEvt) {
+      let otherEvt = events.lookup(req.query.otherEvt);
+      let pids = _.intersection(indexEvt.children.rawValues(),
+                              otherEvt.children.rawValues());
+
+      pids = _.sortBy(pids, pid=>sortByOther(pid, req.query.indexEvt, req.query.otherEvt));
+      res.json(pids);
+    } else {
+      res.json(events.lookup(req.query.indexEvt).children.rawValues());
+    }
   } else {
     console.log('no indexEvt requested');
     res.json(patients.rawValues());
   }
 });
+function sortByOther(pid, indexEvt, otherEvt) {
+  let patient = patients.lookup(pid);
+  setIndexDate(patient, indexEvt);
+  let oeRecs = patient.records.filter(d=>d.name_0 == otherEvt)
+  let days = _.pluck(oeRecs, 'days_from_index');
+  let pos = _.min(days);
+  //console.log(`pid: ${pid}, recs: ${patient.records.length}, oeRecs: ${oeRecs.length}, days: ${days.join(',')}, ${pos}`);
+  return pos;
+}
+function setIndexDate(patient, indexEvt) { // patient.children.dim === 'name_0'
+  let recs = patient.children.lookup(indexEvt).records;
+  let indexRec = _.sortBy(recs, d=>d.start_date)[0];
+  let indexDate = indexRec.start_date;
+  patient.records.forEach(r=>{
+    r.days_from_index = daysDiff(indexDate, r.start_date)
+    r.index_date = indexDate;
+  });
+}
 app.get("/data/patient/:id", function(req, res) {
   let pt = patients.lookup(req.params.id);
   if (req.query.indexEvt) {
@@ -78,7 +107,7 @@ app.get("/data/events", function(req, res) {
   console.log(evtRecs.length + ' evtRecs');
   res.json(evtRecs);
 });
-app.get("/data/person_data", function(req, res) {
+app.get("/data/person_dataOBSOLETE", function(req, res) {
   if (NO_DB) {
     console.log(req.query);
     readJSONFile( './static/data/person_data_all.json',

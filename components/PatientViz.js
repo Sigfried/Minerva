@@ -44,6 +44,7 @@ export default class PatientViz extends Component {
             patientQueryString: this.props.router.location.search,
         });
         this.setState({person_ids: json, patients, search})
+        //window.patients = patients;
       });
     fetch('/data/events')
       .then(response => response.json())
@@ -64,6 +65,7 @@ export default class PatientViz extends Component {
     const {patients, highlightedPatient, highlightedPatientIdx, 
             events, highlightEvts, highlightEvt} = this.state;
     let indexEvt = router.location.query.indexEvt;
+    let otherEvt = router.location.query.otherEvt;
 
     let timelineMouseEvents = {
       labelMouseover: this.labelHover.bind(this),
@@ -71,6 +73,7 @@ export default class PatientViz extends Component {
     }
     let info = <h4>{patients && patients.length || 0} patients in cohort
                     {indexEvt && ` with ${indexEvt}`}
+                    {otherEvt && `, ${otherEvt}`}
                </h4>;
     let zeroCenterDomain = [-1, 1];
     if (highlightedPatient) {
@@ -109,6 +112,7 @@ export default class PatientViz extends Component {
               //${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
     let evtColors = {
       [indexEvt]: 'blue',
+      [otherEvt]: 'orange',
     }
     return  <Grid> 
               <Row>
@@ -146,6 +150,7 @@ export default class PatientViz extends Component {
                   <Tabs defaultActiveKey={1}>
                     <Tab eventKey={1} title="Index Evt">
                       <EventListicle 
+                        evtType="indexEvt"
                         router={router}
                         configChange={configChange}
                         evtHover={this.evtHover.bind(this)}
@@ -155,7 +160,18 @@ export default class PatientViz extends Component {
                         events={events} 
                       />
                     </Tab>
-                    <Tab eventKey={2} title="Evts of Interest">Tab 2 content</Tab>
+                    <Tab eventKey={2} title="Evts of Interest">
+                      <EventListicle 
+                        evtType="otherEvt"
+                        router={router}
+                        configChange={configChange}
+                        evtHover={this.evtHover.bind(this)}
+                        highlightEvts={highlightEvts}
+                        highlightEvt={highlightEvt && highlightEvt.toString()}
+                        width={650} height={600} 
+                        events={events} 
+                      />
+                    </Tab>
                     <Tab eventKey={3} title="Settings" >Tab 3 content</Tab>
                   </Tabs>
                 </Col>
@@ -272,7 +288,7 @@ class EventListicle extends Component {
     }
   }
   render() {
-    const {width, height, events, highlightEvts, eventHighlighted,
+    const {width, height, evtType, events, highlightEvts, eventHighlighted,
             configChange, router, evtHover} = this.props;
     if (! (events && events.length))
       return <div/>;
@@ -309,7 +325,7 @@ class EventListicle extends Component {
                         endHover={this.endHighlight.bind(this)}
                         isHighlighted={this.isHighlighted.bind(this)}
                         click={ evt=>configChange(router, 
-                                    'indexEvt', evt.name) }
+                                    evtType, evt.name) }
                 >
                 </Listicle>
               </Col>
