@@ -10,6 +10,7 @@ import _, {Supergroup} from 'supergroup-es6';
 import {Patient, Timeline} from './Patient';
 import {PatientGroup} from './PatientList';
 import Listicle from './Listicle';
+import { Table, Column, Cell } from 'fixed-data-table';
 require('isomorphic-fetch');
 //var css = require('css!bootstrap/dist/css/bootstrap.css');
 require("!style!css!less!../style.less");
@@ -111,8 +112,8 @@ export default class PatientViz extends Component {
             //textFn: d => `${d.concept_name}<br/>
               //${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
     let evtColors = {
-      [indexEvt]: 'blue',
-      [otherEvt]: 'orange',
+      [indexEvt]: 'rgba(0,0,255,.5)',
+      [otherEvt]: 'rgba(255,100,0, .5)',
     }
     return  <Grid> 
               <Row>
@@ -243,11 +244,38 @@ class EventList extends Component {
     const {patient} = this.props;
     if (!patient)
       return <div/>;
-    let list = patient.eras.map((d,i)=>
-      <p key={i}>Day {d.days_from_index}: {d.name_0} 
-        { d.name_0 === d.concept_name ? '' : (' -> ' + d.concept_name)}
-      </p>);
-    return <div>{list}</div>;
+    return <Table
+              rowsCount={patient.eras.length}
+              rowHeight={30}
+              headerHeight={30}
+              width={300}
+              height={250}
+            >
+              <Column 
+                      header={<Cell>Days</Cell>}
+                      cell={props => 
+                        <Cell {...props}>
+                          {patient.eras[props.rowIndex].days_from_index}
+                        </Cell>}
+                      width={40} 
+                      />
+              <Column 
+                      header={<Cell>Concept</Cell>}
+                      cell={props => 
+                        <Cell {...props}>
+                          {patient.eras[props.rowIndex].name_0}
+                        </Cell>}
+                      width={100} 
+                      />
+              <Column 
+                      header={<Cell>Concept</Cell>}
+                      cell={props => 
+                        <Cell {...props}>
+                          {patient.eras[props.rowIndex].concept_name}
+                        </Cell>}
+                      width={160} 
+                      />
+            </Table>
   }
 }
 
