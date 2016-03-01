@@ -12,6 +12,14 @@ function dateRound(offset, granularity) {
     return Math.round(offset / 365.25);
   throw new Error(`unknown granularity: ${granularity}`);
 }
+function granularityDenom(granularity) {
+  let denom = 1;
+  if (granularity === "month")
+    denom = 30;
+  if (granularity === "year")
+    denom = 365;
+  return denom;
+}
 /*
 function dateRound(date, granularity) {
   let day = new Date(date).setHours(0);
@@ -35,11 +43,7 @@ export class Patient {
     this.patientQueryString = this.opts.patientQueryString;
   }
   dateRange(granularity) {
-    let denom = 1;
-    if (granularity === "month")
-      denom = 30;
-    if (granularity === "year")
-      denom = 365;
+    let denom = granularityDenom(granularity);
     return this._date_range || 
           (this._data_range = [
             Math.round(_.min(this.eras.map(d=>d.days_from_index)) / denom),
@@ -166,11 +170,16 @@ export class Patient {
     let dr = ext[1] - ext[0];
     return <div>
        Pt {this.get('id')}: {this.get('age')} {this.get('race')} {this.get('gender')}. {
-         this.eras.length} eras; {dr} days of history; <br/>
+         this.eras.length} eras; {dr} days of history; 
          Events group into {this.periods('day').length} distinct days, {
            this.periods('month').length} months, or {
              this.periods('year').length} years
        </div>;
+  }
+  rowByDaysFromIndex(days = 0, granularity) {
+    let multiplier = granularityDenom(granularity);
+    let spot = days * multiplier;
+    return _.findIndex(this.eras, d=>d.days_from_index >= spot) - 1;
   }
 }
 export class PatientDisplay extends Component {

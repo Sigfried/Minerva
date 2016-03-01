@@ -61,8 +61,8 @@ export default class PatientViz extends Component {
   }
   render() {
     let {width, height, granularity, configChange, router} = this.props;
-    width = (typeof width === "undefined") && 800 || width;
-    height = (typeof height === "undefined") && 300 || height;
+    //width = (typeof width === "undefined") && 800 || width;
+    //height = (typeof height === "undefined") && 300 || height;
     const {patients, highlightedPatient, highlightedPatientIdx, 
             events, highlightEvts, highlightEvt} = this.state;
     let indexEvt = router.location.query.indexEvt;
@@ -82,18 +82,22 @@ export default class PatientViz extends Component {
       zeroCenterDomain = [ -(Math.max(Math.abs(dr[0]),Math.abs(dr[1]))),
                                 (Math.max(Math.abs(dr[0]),Math.abs(dr[1])))];
     }
+    let evtColors = {
+      [otherEvt]: 'rgba(255,100,0, .5)',
+      [indexEvt]: 'rgba(0,0,255,.8)',
+    }
     let timelineOpts = 
           {
             direction: 'down',
-            initialWidth: width,
-            initialHeight: 2500,
+            initialWidth: 1000, //width,
+            initialHeight: 50,
             layerGap: 30,
             labella: {
               //minPos: 100, 
-              maxPos: width * .85, //stubWidth: 100,
+              //maxPos: width * .85, //stubWidth: 100,
               nodeHeight: 25,
             },
-            //dotsOnly: true,
+            dotsOnly: true,
             scale: d3.scale.linear(),//.domain(zeroCenterDomain),
             domain: zeroCenterDomain,
             timeFn: d => d.valueOf(),
@@ -101,20 +105,18 @@ export default class PatientViz extends Component {
             dotRadius: d => Math.pow(d.records.length, 3/4),
             //dotColor: 'rgba(50, 80, 100, 0.5)',
             dotColor: dot => {
-              if (dot.valueOf() === 0)
-                return 'red';
-              let highlighted = _.any(dot.children,
-                    evt=> _.contains(this.getHighlightedEvts(), evt.toString())); // SLOW!
-              return highlighted ?  'rgba(70, 120, 140, 0.7)' : 'rgba(50, 80, 100, 0.4)';
+              let dotColor = 'rgba(50, 80, 100, 0.3)';
+              _.any(evtColors, (color, specialEvt) => {
+                if (_.any(dot.children, evt => evt == specialEvt))
+                  dotColor = color;
+              });
+              //if (dot == 0) debugger;
+              return dotColor;
             },
             linkColor: 'rgba(50, 80, 100, 0.5)',
           };
             //textFn: d => `${d.concept_name}<br/>
               //${(d.end_date - d.start_date)/(1000*60*60*24)} days`,
-    let evtColors = {
-      [indexEvt]: 'rgba(0,0,255,.5)',
-      [otherEvt]: 'rgba(255,100,0, .5)',
-    }
     return  <Grid> 
               <Row>
                 <Col md={12}>
@@ -125,13 +127,13 @@ export default class PatientViz extends Component {
                     highlightedPatient, highlightedPatientIdx,
                     highlightPatient:this.highlightPatient.bind(this),
                   })}
-                  <h5>{highlightedPatient && highlightedPatient.desc() || ''}</h5>
                 </Col>
               </Row>
               <hr/>
               <Row>
-                <Col md={7}>
-                  <Timeline height={height} width={width}
+                <Col md={12}>
+                  <h5>{highlightedPatient && highlightedPatient.desc() || ''}</h5>
+                  <Timeline height={50} width={1000}
                     opts={timelineOpts}
                     timelineMouseEvents={timelineMouseEvents}
                     //eras={highlightedPatient && highlightedPatient.lookup("Condition").records}
@@ -139,9 +141,13 @@ export default class PatientViz extends Component {
                   >
                   </Timeline>
                 </Col>
-                <Col mdOffset={2} md={3}>
+              </Row>
+              <Row>
+                <Col md={12}>
                   <EventList
                     patient={highlightedPatient}
+                    hoverIndex={this.state.hoverIndex}
+                    granularity={granularity}
                   />
                 </Col>
               </Row>
@@ -157,7 +163,7 @@ export default class PatientViz extends Component {
                         evtHover={this.evtHover.bind(this)}
                         highlightEvts={highlightEvts}
                         highlightEvt={highlightEvt && highlightEvt.toString()}
-                        width={650} height={600} 
+                        width={650} height={250} 
                         events={events} 
                       />
                     </Tab>
@@ -228,11 +234,12 @@ export default class PatientViz extends Component {
   }
   labelHover(node) {
     let highlightEvts = node.children.map(String); // labels/dots have event children
-    this.setState({highlightEvts, highlightEvt: null});
+    this.setState({hoverIndex: node+0});
+    //this.setState({highlightEvts, highlightEvt: null});
   }
   evtHover(highlightEvt) { // WHAT ABOUT END HOVER?
     //THEN: listicle highlight filters patient list
-    this.setState({highlightEvts: [highlightEvt], highlightEvt});
+    //this.setState({highlightEvts: [highlightEvt], highlightEvt});
   }
   highlightPatient(patient, idx) {
     let highlightEvts = patient.allEvts().rawValues();
@@ -241,15 +248,17 @@ export default class PatientViz extends Component {
 }
 class EventList extends Component {
   render() {
-    const {patient} = this.props;
+    const {patient, hoverIndex, granularity} = this.props;
     if (!patient)
       return <div/>;
+    console.log(`hover ${hoverIndex}, scroll: ${patient.rowByDaysFromIndex(hoverIndex, granularity)}`);
     return <Table
               rowsCount={patient.eras.length}
               rowHeight={30}
               headerHeight={30}
-              width={300}
+              width={1000}
               height={250}
+              scrollToRow={patient.rowByDaysFromIndex(hoverIndex, granularity)}
             >
               <Column 
                       header={<Cell>Days</Cell>}
@@ -257,7 +266,7 @@ class EventList extends Component {
                         <Cell {...props}>
                           {patient.eras[props.rowIndex].days_from_index}
                         </Cell>}
-                      width={40} 
+                      width={60} 
                       />
               <Column 
                       header={<Cell>Concept</Cell>}
@@ -265,15 +274,15 @@ class EventList extends Component {
                         <Cell {...props}>
                           {patient.eras[props.rowIndex].name_0}
                         </Cell>}
-                      width={100} 
+                      width={300} 
                       />
               <Column 
-                      header={<Cell>Concept</Cell>}
+                      header={<Cell>Concept Detail</Cell>}
                       cell={props => 
                         <Cell {...props}>
                           {patient.eras[props.rowIndex].concept_name}
                         </Cell>}
-                      width={160} 
+                      width={640} 
                       />
             </Table>
   }
@@ -329,7 +338,8 @@ class EventListicle extends Component {
     return <Grid>
             <Row>
               <Col md={2}>
-                <h4 style={{textAlign:'right'}}>Index by first:</h4>
+                <h4 style={{textAlign:'right'}}>
+                  {evtType==='indexEvt'?'Index by first' : 'Other Event of Interest'}</h4>
                 <br/>
                 <br/>
                 <br/>
