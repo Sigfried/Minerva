@@ -99,7 +99,7 @@ export class Patient {
               maxPos: 300 * .85, //stubWidth: 100,
               nodeHeight: 25,
             },
-            dotsOnly: true,
+            //dotsOnly: true,
             scale: d3.scale.linear(),
             domain: zeroCenterDomain,
             timeFn: d => d.valueOf(),

@@ -10,7 +10,7 @@
 
 .highlighted {
   opacity: .7;
-  background-color: yellow;
+  background-color: yellow !important;
   border: 1px dashed brown;
 }
 .grayout {
@@ -39,4 +39,7 @@
     background-color: fadeout(color('steelblue'), 45%);
     height: 100%;
   }
+}
+.fixedDataTableRowLayout_rowWrapper:hover .public_fixedDataTableCell_main {
+    background-color: yellow;
 }

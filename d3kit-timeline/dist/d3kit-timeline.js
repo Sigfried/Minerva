@@ -134,8 +134,7 @@ function (d3, d3Kit, labella) {
       layers.get('main')
         .attr('transform', axisTransform);
 
-      if (options.dotsOnly) 
-        axis.tickValues([]);
+      //if (options.dotsOnly) axis.tickValues([]);
 
       layers.get('main.axis')
         .call(axis);
