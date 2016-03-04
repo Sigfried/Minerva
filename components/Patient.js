@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-import d3KitTimeline from '../d3Kit-timeline/src/d3Kit-timeline';
+import d3KitTimeline from '../d3Kit-timeline-local';
 require('isomorphic-fetch');
 
 function dateRound(offset, granularity) {
