@@ -1,7 +1,8 @@
+'use strict';
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-var d3KitTimeline = require('../d3Kit-timeline-local.js');
 require('isomorphic-fetch');
+var d3KitTimeline = require('./d3kit-timeline-local.js');
 
 function dateRound(offset, granularity) {
   if (granularity === 'day')
