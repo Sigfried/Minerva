@@ -91,14 +91,14 @@ export default class PatientViz extends Component {
           {
             direction: 'down',
             initialWidth: 1000, //width,
-            initialHeight: 190,
+            initialHeight: 80,
             layerGap: 30,
             labella: {
               //minPos: 100, 
               maxPos: 950, //stubWidth: 100,
               nodeHeight: 25,
             },
-            //dotsOnly: true,
+            dotsAndTicks: true,
             scale: d3.scale.linear(),//.domain(zeroCenterDomain),
             domain: zeroCenterDomain,
             timeFn: d => d.valueOf(),
@@ -134,7 +134,7 @@ export default class PatientViz extends Component {
               <Row>
                 <Col md={12}>
                   <h5>{highlightedPatient && highlightedPatient.desc() || ''}</h5>
-                  <Timeline height={190} width={1000}
+                  <Timeline height={80} width={1000}
                     opts={timelineOpts}
                     timelineMouseEvents={timelineMouseEvents}
                     //eras={highlightedPatient && highlightedPatient.lookup("Condition").records}

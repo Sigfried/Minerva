@@ -2,7 +2,7 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 require('isomorphic-fetch');
-var d3KitTimeline = require('./d3kit-timeline-local.js');
+var d3KitTimeline = require('./d3kit-timeline.js');
 
 function dateRound(offset, granularity) {
   if (granularity === 'day')
@@ -100,7 +100,7 @@ export class Patient {
               maxPos: 300 * .85, //stubWidth: 100,
               nodeHeight: 25,
             },
-            //dotsOnly: true,
+            dotsOnly: true,
             scale: d3.scale.linear(),
             domain: zeroCenterDomain,
             timeFn: d => d.valueOf(),

@@ -48,6 +48,7 @@ function (d3, d3Kit, labella) {
     labelPadding: {left: 4, right: 4, top: 3, bottom: 2},
     textYOffset: '0.85em',
     dotsOnly: false,
+    dotsAndTicks: false,
   };
 
   var CUSTOM_EVENTS = [
@@ -134,12 +135,13 @@ function (d3, d3Kit, labella) {
       layers.get('main')
         .attr('transform', axisTransform);
 
-      //if (options.dotsOnly) axis.tickValues([]);
+      if (options.dotsOnly) 
+        axis.tickValues([]);
 
       layers.get('main.axis')
         .call(axis);
 
-      if (options.dotsOnly) 
+      if (options.dotsOnly || options.dotsAndTicks) 
         return;
 
       var dummyText = layers.get('dummy').append('text')
