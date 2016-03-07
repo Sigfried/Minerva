@@ -255,6 +255,17 @@ class EventList extends Component {
     if (!patient)
       return <div/>;
     console.log(`hover ${hoverIndex}, scroll: ${patient.rowByDaysFromIndex(hoverIndex, granularity)}`);
+    let monthCol = '';
+    if (granularity === 'month') {
+      monthCol = <Column 
+                      header={<Cell>Months</Cell>}
+                      cell={props => 
+                        <Cell {...props}>
+                          {Math.round(patient.eras[props.rowIndex].days_from_index / 30)}
+                        </Cell>}
+                      width={60} 
+                      />
+    }
     return <Table
               rowsCount={patient.eras.length}
               rowClassNameGetter={(idx) => {
@@ -278,6 +289,7 @@ class EventList extends Component {
                         </Cell>}
                       width={60} 
                       />
+              {monthCol}
               <Column 
                       header={<Cell>Concept</Cell>}
                       cell={props => 

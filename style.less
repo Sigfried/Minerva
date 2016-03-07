@@ -40,6 +40,20 @@
     height: 100%;
   }
 }
-.fixedDataTableRowLayout_rowWrapper:hover .public_fixedDataTableCell_main {
+.fixedDataTableRowLayout_rowWrapper {
+  & .indexEvt .public_fixedDataTableCell_main {
+    background-color: blue;
+  }
+  & .otherEvt .public_fixedDataTableCell_main {
+    background-color: orange;
+  }
+  &:hover .public_fixedDataTableCell_main {
     background-color: yellow;
+  }
+  & .highlighted {
+    background-color: gold;
+  }
 }
+//,fixedDataTableCellLayout_main public_fixedDataTableCell_main
+    //&.indexEvt {
+    //}
