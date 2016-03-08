@@ -7,7 +7,7 @@ import { Grid, Row, Col, Glyphicon, Button, Panel, ButtonToolbar,
          Input, Tabs, Tab } from 'react-bootstrap';
 import * as Selector from '../selectors';
 import _, {Supergroup} from 'supergroup-es6';
-import {Patient, Timeline} from './Patient';
+import {Patient, Timeline, granularityDenom} from './Patient';
 import {PatientGroup} from './PatientList';
 import Listicle from './Listicle';
 import { Table, Column, Cell } from 'fixed-data-table';
@@ -111,6 +111,11 @@ export default class PatientViz extends Component {
                 if (_.any(dot.children, evt => evt == specialEvt))
                   dotColor = color;
               });
+              console.log(this.state.hoverIndex);
+              if (dot.valueOf() === this.state.hoverIndex) {
+                dotColor = 'yellow';
+                //debugger;
+              }
               //if (dot == 0) debugger;
               return dotColor;
             },
@@ -151,6 +156,7 @@ export default class PatientViz extends Component {
                     granularity={granularity}
                     indexEvt={indexEvt}
                     otherEvt={otherEvt}
+                    highlight={this.highlightDate.bind(this)}
                   />
                 </Col>
               </Row>
@@ -245,13 +251,16 @@ export default class PatientViz extends Component {
     //this.setState({highlightEvts: [highlightEvt], highlightEvt});
   }
   highlightPatient(patient, idx) {
-    let highlightEvts = patient.allEvts().rawValues();
-    this.setState({highlightedPatient:patient, highlightedPatientIdx:idx, highlightEvts});
+    //let highlightEvts = patient.allEvts().rawValues();
+    this.setState({highlightedPatient:patient, highlightedPatientIdx:idx/*, highlightEvts*/});
+  }
+  highlightDate(date) {
+    this.setState({hoverIndex:date});
   }
 }
 class EventList extends Component {
   render() {
-    const {patient, hoverIndex, granularity, indexEvt, otherEvt} = this.props;
+    const {patient, hoverIndex, granularity, indexEvt, otherEvt, highlight} = this.props;
     if (!patient)
       return <div/>;
     console.log(`hover ${hoverIndex}, scroll: ${patient.rowByDaysFromIndex(hoverIndex, granularity)}`);
@@ -268,6 +277,11 @@ class EventList extends Component {
     }
     return <Table
               rowsCount={patient.eras.length}
+              onRowMouseEnter={
+                (evt, rowIndex, notsure)=> 
+                  highlight(Math.round(patient.eras[rowIndex].days_from_index/
+                                       granularityDenom(granularity)))
+              }
               rowClassNameGetter={(idx) => {
                 if (patient.eras[idx].name_0 == indexEvt)
                   return 'indexEvt';

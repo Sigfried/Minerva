@@ -13,7 +13,7 @@ function dateRound(offset, granularity) {
     return Math.round(offset / 365.25);
   throw new Error(`unknown granularity: ${granularity}`);
 }
-function granularityDenom(granularity) {
+export function granularityDenom(granularity) {
   let denom = 1;
   if (granularity === "month")
     denom = 30;
@@ -178,9 +178,10 @@ export class Patient {
        </div>;
   }
   rowByDaysFromIndex(days = 0, granularity) {
-    let multiplier = granularityDenom(granularity);
-    let spot = days * multiplier;
-    return _.findIndex(this.eras, d=>d.days_from_index >= spot) - 1;
+    return _.findIndex(this.eras, d=>d.days_from_index / granularityDenom(granularity) >= days);
+    //let multiplier = granularityDenom(granularity);
+    //let spot = days * multiplier;
+    //return _.findIndex(this.eras, d=>d.days_from_index >= spot) - 1;
   }
 }
 export class PatientDisplay extends Component {
