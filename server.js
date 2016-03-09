@@ -82,18 +82,19 @@ function setIndexDate(patient, indexEvt) { // patient.children.dim === 'name_0'
 }
 app.get("/data/patient/:id", function(req, res) {
   let pt = patients.lookup(req.params.id);
+  let indexDate;
   if (req.query.indexEvt) {
     let recs = pt.children.lookup(req.query.indexEvt).records;
     let indexRec = _.sortBy(recs, d=>d.start_date)[0];
-    let indexDate = indexRec.start_date;
-    pt.records.forEach(r=>{
-      r.days_from_index = daysDiff(indexDate, r.start_date)
-      r.index_date = indexDate;
-    });
-    res.json(pt.records);
+    indexDate = indexRec.start_date;
   } else {
-    res.json(patients.lookup(req.params.id).records);
+    indexDate = pt.records[0].start_date;
   }
+  pt.records.forEach(r=>{
+    r.days_from_index = daysDiff(indexDate, r.start_date)
+    r.index_date = indexDate;
+  });
+  res.json(pt.records);
   //console.log(`pt ${req.params.id} found: ${!!pt}`);
 });
 app.get("/data/events", function(req, res) {
@@ -107,6 +108,7 @@ app.get("/data/events", function(req, res) {
   console.log(evtRecs.length + ' evtRecs');
   res.json(evtRecs);
 });
+/*
 app.get("/data/person_dataOBSOLETE", function(req, res) {
   if (NO_DB) {
     console.log(req.query);
@@ -144,7 +146,14 @@ app.get("/data/person_dataOBSOLETE", function(req, res) {
             });
             res.json(pts.records);
           } else {
-            res.json(data);
+            pts.forEach(p=>{
+              let indexDate = p.records[0].start_date;
+              p.records.forEach(r=>{
+                r.days_from_index = daysDiff(indexDate, r.start_date)
+                r.index_date = indexDate;
+              });
+            });
+            res.json(pts.records);
           }
         });
     //res.sendFile('./static/data/person_data_all.json',{ root: __dirname });
@@ -170,6 +179,7 @@ app.get("/data/person_dataOBSOLETE", function(req, res) {
     })
     .then(json => res.json(json));
 });
+*/
 app.use(function(req, res) {
   res.sendFile(__dirname + '/index.html');
 });

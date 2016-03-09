@@ -45,7 +45,7 @@ export default class PatientViz extends Component {
             patientQueryString: this.props.router.location.search,
         });
         this.setState({person_ids: json, patients, search})
-        //window.patients = patients;
+        window.patients = patients;
       });
     fetch('/data/events')
       .then(response => response.json())
@@ -65,7 +65,7 @@ export default class PatientViz extends Component {
     //height = (typeof height === "undefined") && 300 || height;
     const {patients, highlightedPatient, highlightedPatientIdx, 
             events, highlightEvts, highlightEvt} = this.state;
-    let indexEvt = router.location.query.indexEvt;
+    let indexEvt = router.location.query.indexEvt || 'first';
     let otherEvt = router.location.query.otherEvt;
 
     let timelineMouseEvents = {
@@ -73,11 +73,11 @@ export default class PatientViz extends Component {
       dotMouseover: this.labelHover.bind(this),
     }
     let info = <h4>{patients && patients.length || 0} patients in cohort
-                    {indexEvt && ` with ${indexEvt}`}
+                    {(indexEvt !== 'first') && ` with ${indexEvt}`}
                     {otherEvt && `, ${otherEvt}`}
                </h4>;
     let zeroCenterDomain = [-1, 1];
-    if (highlightedPatient) {
+    if (highlightedPatient && highlightedPatient.dataLoaded) {
       let dr = highlightedPatient.dateRange(granularity);
       zeroCenterDomain = [ -(Math.max(Math.abs(dr[0]),Math.abs(dr[1]))),
                                 (Math.max(Math.abs(dr[0]),Math.abs(dr[1])))];
@@ -138,12 +138,14 @@ export default class PatientViz extends Component {
               <hr/>
               <Row>
                 <Col md={12}>
-                  <h5>{highlightedPatient && highlightedPatient.desc() || ''}</h5>
+                  <h5>{highlightedPatient && highlightedPatient.dataLoaded &&
+                       highlightedPatient.desc() || ''}</h5>
                   <Timeline height={80} width={1000}
                     opts={timelineOpts}
                     timelineMouseEvents={timelineMouseEvents}
                     //eras={highlightedPatient && highlightedPatient.lookup("Condition").records}
-                    dots={highlightedPatient && highlightedPatient.eventsBy(granularity)}
+                    dots={highlightedPatient && highlightedPatient.dataLoaded &&
+                         highlightedPatient.eventsBy(granularity)}
                   >
                   </Timeline>
                 </Col>
@@ -276,13 +278,15 @@ class EventList extends Component {
                       />
     }
     return <Table
-              rowsCount={patient.eras.length}
+              rowsCount={patient.dataLoaded && patient.eras.length || 0}
               onRowMouseEnter={
                 (evt, rowIndex, notsure)=> 
                   highlight(Math.round(patient.eras[rowIndex].days_from_index/
                                        granularityDenom(granularity)))
               }
               rowClassNameGetter={(idx) => {
+                if (indexEvt === 'first' && idx === 0)
+                  return 'indexEvt';
                 if (patient.eras[idx].name_0 == indexEvt)
                   return 'indexEvt';
                 if (patient.eras[idx].name_0 == otherEvt)
