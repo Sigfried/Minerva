@@ -46,10 +46,12 @@ export class Patient {
   dateRange(granularity) {
     let denom = granularityDenom(granularity);
     return this._date_range || 
-          (this._data_range = [
-            Math.round(_.min(this.eras.map(d=>d.days_from_index)) / denom),
-            Math.round(_.max(this.eras.map(d=>d.days_from_index)) / denom),
-          ]);
+          (this.eras && this.eras.length &&
+            (this._data_range = [
+              Math.round(_.min(this.eras.map(d=>d.days_from_index)) / denom),
+              Math.round(_.max(this.eras.map(d=>d.days_from_index)) / denom),
+            ])
+          );
   }
   eventDays() {
     return this.eventPeriods('day');
