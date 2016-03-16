@@ -6,12 +6,13 @@ module.exports = {
   devtool: 'source-map',
   entry: [
     //'webpack-hot-middleware/client',
-    './index'
+    './index.js'
   ],
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'bundle.js',
-    publicPath: '/static/'
+    publicPath: '/static/',
+    libraryTarget: "amd"
   },
   plugins: [
     new webpack.optimize.OccurenceOrderPlugin(),
